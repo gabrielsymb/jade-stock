@@ -1,721 +1,1867 @@
 <!doctype html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Guia de Estudos | APIs, IA, Contábil e IAM | Jade-stock</title>
-    <style>
-      :root {
-        --bg-canvas: #f3f3f3;
-        --bg-surface: #ffffff;
-        --bg-surface-2: #fafafa;
-        --fg-1: #1b1a19;
-        --fg-2: #605e5c;
-        --brand: #0f6cbd;
-        --brand-2: #115ea3;
-        --stroke-1: #d0d0d0;
-        --stroke-2: #e7e7e7;
-        --ok: #107c10;
-        --warn: #8a6900;
-        --risk: #a4262c;
-        --radius-1: 10px;
-        --radius-2: 14px;
-        --radius-3: 18px;
-        --shadow-1: 0 2px 8px rgba(0, 0, 0, 0.08);
-        --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.12);
-      }
-
-      * { box-sizing: border-box; }
-
-      body {
-        margin: 0;
-        color: var(--fg-1);
-        font-family: "Segoe UI", "Segoe UI Variable", system-ui, -apple-system, sans-serif;
-        background:
-          radial-gradient(1300px 700px at 0% -10%, #dbeafe 0%, transparent 60%),
-          radial-gradient(1200px 800px at 100% -10%, #dcfce7 0%, transparent 58%),
-          linear-gradient(180deg, #f9f9f9 0%, var(--bg-canvas) 100%);
-        min-height: 100vh;
-      }
-
-      .layout {
-        max-width: 1580px;
-        margin: 0 auto;
-        padding: 20px;
-        display: grid;
-        grid-template-columns: 310px minmax(0, 1fr);
-        gap: 20px;
-      }
-
-      .side {
-        position: sticky;
-        top: 14px;
-        align-self: start;
-        border: 1px solid var(--stroke-2);
-        border-radius: var(--radius-3);
-        background: color-mix(in srgb, var(--bg-surface) 88%, #fff);
-        backdrop-filter: blur(8px);
-        box-shadow: var(--shadow-1);
-        padding: 14px;
-      }
-
-      .side h2 {
-        margin: 0 0 6px;
-        font-size: 18px;
-      }
-
-      .side p {
-        margin: 0 0 12px;
-        color: var(--fg-2);
-        font-size: 13px;
-        line-height: 1.4;
-      }
-
-      .side a {
-        display: block;
-        text-decoration: none;
-        color: var(--brand-2);
-        font-weight: 700;
-        font-size: 14px;
-        border-radius: 10px;
-        padding: 9px 10px;
-      }
-
-      .side a:hover { background: #edf4fb; }
-
-      .main {
-        display: grid;
-        gap: 16px;
-      }
-
-      .hero,
-      .card,
-      .module {
-        border: 1px solid var(--stroke-2);
-        border-radius: var(--radius-3);
-        background: color-mix(in srgb, var(--bg-surface) 92%, #fff);
-        box-shadow: var(--shadow-1);
-      }
-
-      .hero {
-        padding: 24px;
-        box-shadow: var(--shadow-2);
-      }
-
-      .eyebrow {
-        margin: 0;
-        color: var(--brand);
-        font-weight: 800;
-        font-size: 12px;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
-
-      h1 {
-        margin: 8px 0 10px;
-        line-height: 1.1;
-        font-size: clamp(28px, 4vw, 44px);
-      }
-
-      h2 {
-        margin: 0 0 10px;
-        font-size: 26px;
-        line-height: 1.2;
-      }
-
-      h3 {
-        margin: 0 0 8px;
-        font-size: 20px;
-      }
-
-      p {
-        margin: 0 0 10px;
-        line-height: 1.6;
-      }
-
-      .chips {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        margin-top: 12px;
-      }
-
-      .chip {
-        border: 1px solid #bfdbfe;
-        border-radius: 999px;
-        background: #eaf3ff;
-        color: #12395f;
-        font-size: 12px;
-        font-weight: 800;
-        padding: 6px 10px;
-      }
-
-      .grid-4 {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 10px;
-      }
-
-      .grid-3 {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 10px;
-      }
-
-      .tile {
-        border: 1px solid var(--stroke-2);
-        border-radius: var(--radius-2);
-        background: var(--bg-surface);
-        padding: 12px;
-      }
-
-      .tile strong {
-        display: block;
-        margin-bottom: 6px;
-        color: var(--brand);
-      }
-
-      .card { padding: 16px; }
-
-      .module {
-        overflow: hidden;
-      }
-
-      .module summary {
-        list-style: none;
-        cursor: pointer;
-        padding: 16px;
-        background: linear-gradient(90deg, #eef5fc 0%, #f7fbff 100%);
-        border-bottom: 1px solid var(--stroke-2);
-      }
-
-      .module summary::-webkit-details-marker { display: none; }
-
-      .module summary h3 {
-        display: inline;
-      }
-
-      .module summary .meta {
-        display: block;
-        margin-top: 6px;
-        color: var(--fg-2);
-        font-size: 14px;
-      }
-
-      .module-body {
-        padding: 16px;
-        display: grid;
-        gap: 12px;
-        background: var(--bg-surface);
-      }
-
-      .split {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-      }
-
-      .box {
-        border: 1px solid var(--stroke-2);
-        border-radius: var(--radius-2);
-        background: var(--bg-surface-2);
-        padding: 12px;
-      }
-
-      .box h4 {
-        margin: 0 0 8px;
-        font-size: 15px;
-        color: var(--brand);
-      }
-
-      ul,
-      ol {
-        margin: 0;
-        padding-left: 20px;
-        line-height: 1.6;
-      }
-
-      .refs {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
-        gap: 10px;
-      }
-
-      .ref {
-        border: 1px solid var(--stroke-2);
-        border-radius: var(--radius-2);
-        overflow: hidden;
-        background: #fff;
-      }
-
-      .thumb {
-        min-height: 110px;
-        padding: 10px;
-        color: #fff;
-        display: grid;
-        align-content: end;
-        gap: 6px;
-        font-weight: 800;
-        letter-spacing: 0.01em;
-      }
-
-      .thumb .sub {
-        font-size: 12px;
-        font-weight: 700;
-        opacity: 0.92;
-      }
-
-      .thumb.docs {
-        background:
-          linear-gradient(145deg, rgba(255,255,255,0.14), rgba(255,255,255,0)),
-          linear-gradient(120deg, #16a34a 0%, #15803d 52%, #14532d 100%);
-      }
-
-      .thumb.video {
-        background:
-          linear-gradient(145deg, rgba(255,255,255,0.14), rgba(255,255,255,0)),
-          linear-gradient(120deg, #ef4444 0%, #dc2626 52%, #7f1d1d 100%);
-      }
-
-      .thumb.data {
-        background:
-          linear-gradient(145deg, rgba(255,255,255,0.14), rgba(255,255,255,0)),
-          linear-gradient(120deg, #7c3aed 0%, #6d28d9 52%, #3b0764 100%);
-      }
-
-      .thumb.api {
-        background:
-          linear-gradient(145deg, rgba(255,255,255,0.14), rgba(255,255,255,0)),
-          linear-gradient(120deg, #0284c7 0%, #0369a1 52%, #0c4a6e 100%);
-      }
-
-      .ref-body {
-        padding: 12px;
-      }
-
-      .ref-body strong {
-        display: block;
-        margin-bottom: 6px;
-      }
-
-      .ref-body p {
-        margin: 0 0 8px;
-        color: var(--fg-2);
-        font-size: 14px;
-      }
-
-      .ref-body a {
-        color: var(--brand-2);
-        text-decoration: none;
-        font-weight: 700;
-        word-break: break-word;
-      }
-
-      .ref-body a:hover { text-decoration: underline; }
-
-      .badge {
-        display: inline-block;
-        padding: 4px 8px;
-        border-radius: 8px;
-        font-size: 12px;
-        font-weight: 800;
-      }
-
-      .ok { background: #e6f6e6; color: var(--ok); }
-      .warn { background: #fff4d6; color: var(--warn); }
-      .risk { background: #fde7e9; color: var(--risk); }
-
-      .legend {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-
-      .mini {
-        font-size: 13px;
-        color: var(--fg-2);
-      }
-
-      @media (max-width: 1120px) {
-        .layout {
-          grid-template-columns: 1fr;
-        }
-
-        .side {
-          position: static;
-        }
-
-        .split {
-          grid-template-columns: 1fr;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="layout">
-      <aside class="side">
-        <h2>Trilha de Estudo</h2>
-        <p>
-          Navegue por módulos. Cada módulo está compacto e recolhível para evitar sensação de lista infinita.
-        </p>
-        <a href="#visao">Visão geral</a>
-        <a href="#trilhas">Trilhas por perfil</a>
-        <a href="#curriculo">Grade curricular aplicada</a>
-        <a href="#modulos">Módulos de estudo</a>
-        <a href="#plano">Plano em 12 semanas</a>
-        <a href="#dicionario">Dicionário anti-WTF</a>
-        <a href="#metodo">Método TDAH-friendly</a>
-      </aside>
-
-      <main class="main">
-        <section class="hero" id="visao">
-          <p class="eyebrow">Jade-stock Learning Hub</p>
-          <h1>Guia Visual de Estudos: API, IA/Estatística, Contábil e IAM</h1>
-          <p>
-            Você já fechou a base WMS. Este guia é para os próximos blocos de evolução sem perda de contexto.
-            A proposta é: estudar com profundidade, aplicar em mini ciclos e implementar junto com rastreabilidade.
-          </p>
-          <div class="chips">
-            <span class="chip">API pública robusta</span>
-            <span class="chip">Forecast estatístico e neural</span>
-            <span class="chip">Contábil por eventos</span>
-            <span class="chip">OAuth2/OIDC + tenant/licença</span>
-            <span class="chip">Observabilidade + segurança</span>
-          </div>
-        </section>
-
-        <section class="card" id="trilhas">
-          <h2>Trilhas por perfil (para não se perder)</h2>
-          <div class="grid-3">
-            <article class="tile">
-              <strong>Trilha Produto (prioridade 1)</strong>
-              Entender problema, impacto operacional e critérios de decisão antes do código.
-              <div class="mini">Foco: API de negócio, governança de regras, roadmap de valor.</div>
-            </article>
-            <article class="tile">
-              <strong>Trilha Dados/IA (prioridade 2)</strong>
-              Construir base de previsão com método (baseline -> ARIMA -> neural), sem hype.
-              <div class="mini">Foco: forecast auditável e recomendação confiável.</div>
-            </article>
-            <article class="tile">
-              <strong>Trilha Operação (prioridade 3)</strong>
-              Garantir produção estável: segurança, monitoramento, incidentes, release seguro.
-              <div class="mini">Foco: sistema sustentável para cliente real.</div>
-            </article>
-          </div>
-        </section>
-
-        <section class="card" id="curriculo">
-          <h2>Grade curricular aplicada ao Jade-stock (nível superior)</h2>
-          <p class="mini">
-            Esta grade une ementas de Ciências Contábeis, Estatística e IA para formar uma base robusta de produto,
-            dados e governança. O objetivo é você entender o sistema por completo, inclusive os módulos avançados.
-          </p>
-          <div class="grid-3">
-            <article class="tile">
-              <strong>Trilha Ciências Contábeis (core)</strong>
-              <ul>
-                <li>Contabilidade introdutória, intermediária e avançada.</li>
-                <li>Demonstrações: Balanço Patrimonial, DRE, DFC, DMPL e notas explicativas.</li>
-                <li>Contabilidade de custos e controladoria.</li>
-                <li>Auditoria contábil, controles internos e compliance.</li>
-                <li>Tributário aplicado e impactos por operação.</li>
-                <li>Análise de demonstrações e indicadores.</li>
-              </ul>
-            </article>
-            <article class="tile">
-              <strong>Trilha Estatística (core)</strong>
-              <ul>
-                <li>Probabilidade, inferência e amostragem.</li>
-                <li>Regressão e modelos lineares.</li>
-                <li>Séries temporais (ARIMA/SARIMA) e previsão.</li>
-                <li>Validação de modelo, erro e calibração.</li>
-                <li>Otimização e decisão baseada em dados.</li>
-              </ul>
-            </article>
-            <article class="tile">
-              <strong>Trilha IA/ML (core)</strong>
-              <ul>
-                <li>Fundamentos matemáticos de ML.</li>
-                <li>Modelos supervisionados e avaliação.</li>
-                <li>Deep learning para séries temporais.</li>
-                <li>MLOps: versionamento, deploy e rollback.</li>
-                <li>Governança e auditoria de recomendação.</li>
-              </ul>
-            </article>
-          </div>
-          <div class="refs" style="margin-top: 12px;">
-            <article class="ref"><div class="thumb docs">Grade Contábeis<div class="sub">Referência acadêmica</div></div><div class="ref-body"><strong>UEM - Ciências Contábeis (currículo)</strong><p>Estrutura curricular de graduação para base contábil sólida.</p><a href="https://www.uem.br/cursos/graduacao/campus-maringa/ciencias-contabeis/curriculo-pleno-e-oferta-das-disciplinas" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-            <article class="ref"><div class="thumb data">Grade Estatística<div class="sub">Referência acadêmica</div></div><div class="ref-body"><strong>UFPR - Estatística</strong><p>Base curricular para modelagem, inferência e previsão.</p><a href="https://www.ufpr.br/portalufpr/noticias/estatistica/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-            <article class="ref"><div class="thumb data">Machine Learning<div class="sub">Referência internacional</div></div><div class="ref-body"><strong>Stanford CS229</strong><p>Ementa clássica para organizar estudos de ML com rigor.</p><a href="https://cs229.stanford.edu/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-            <article class="ref"><div class="thumb video">Vídeos PT-BR<div class="sub">Contábeis + Estatística + IA</div></div><div class="ref-body"><strong>YouTube PT-BR (busca integrada)</strong><p>Atalho para aulas em português nas três frentes.</p><a href="https://www.youtube.com/results?search_query=contabilidade+dre+dfc+auditoria+estatistica+machine+learning+portugues" target="_blank" rel="noopener noreferrer">Abrir vídeos PT-BR</a></div></article>
-          </div>
-        </section>
-
-        <section class="card" id="modulos">
-          <h2>Módulos de estudo (acordeão)</h2>
-          <p class="mini">
-            Sugestão: abra 1 módulo por vez. Estude, faça resumo em linguagem de produto, só depois implemente.
-          </p>
-
-          <details class="module" open>
-            <summary>
-              <h3>Etapa A — API madura em produção</h3>
-              <span class="meta">Contrato externo estável, semântica HTTP, idempotência e versionamento.</span>
-            </summary>
-            <div class="module-body">
-              <div class="split">
-                <section class="box">
-                  <h4>O que dominar</h4>
-                  <ul>
-                    <li>Semântica HTTP completa (status codes com propósito).</li>
-                    <li>Erros padronizados com `correlation_id`.</li>
-                    <li>Estratégia de idempotência para operações críticas.</li>
-                    <li>Política de depreciação por versão sem quebra abrupta.</li>
-                  </ul>
-                </section>
-                <section class="box">
-                  <h4>Aplicação no Jade-stock</h4>
-                  <ul>
-                    <li>Padrão único de erro/retorno em todos endpoints v1.</li>
-                    <li>SDK alinhado ao OpenAPI publicado.</li>
-                    <li>Paginação e filtro em leituras grandes.</li>
-                    <li>Contrato de integração explícito para parceiros.</li>
-                  </ul>
-                </section>
-              </div>
-              <div class="refs">
-                <article class="ref"><div class="thumb api">HTTP Semantics<div class="sub">RFC oficial</div></div><div class="ref-body"><strong>RFC 9110</strong><p>Base canônica para decisões de API REST.</p><a href="https://www.rfc-editor.org/rfc/rfc9110" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb api">OpenAPI 3.1<div class="sub">Contrato técnico</div></div><div class="ref-body"><strong>OpenAPI Specification</strong><p>Formato de contrato para docs, SDK e validação.</p><a href="https://spec.openapis.org/oas/v3.1.1.html" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb docs">API Guidelines<div class="sub">Padrões de design</div></div><div class="ref-body"><strong>Microsoft API Guidelines</strong><p>Boas práticas de consistência para APIs públicas.</p><a href="https://github.com/microsoft/api-guidelines" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb video">Vídeos PT-BR<div class="sub">FastAPI e API REST</div></div><div class="ref-body"><strong>YouTube PT-BR (busca)</strong><p>Aulas em português para fixar API REST com FastAPI.</p><a href="https://www.youtube.com/results?search_query=fastapi+portugues+api+rest" target="_blank" rel="noopener noreferrer">Abrir vídeos PT-BR</a></div></article>
-              </div>
-            </div>
-          </details>
-
-          <details class="module">
-            <summary>
-              <h3>Etapa B — Postgres, concorrência e consistência</h3>
-              <span class="meta">Trava transacional do core para evitar corrupção de saldo e eventos.</span>
-            </summary>
-            <div class="module-body">
-              <div class="split">
-                <section class="box"><h4>O que dominar</h4><ul><li>Isolation levels e efeito em leitura/escrita.</li><li>Lock e ordem de atualização para evitar deadlock.</li><li>Modelagem JSONB para event store.</li><li>Índices e performance em carga.</li></ul></section>
-                <section class="box"><h4>Aplicação no Jade-stock</h4><ul><li>Atomicidade saldo + movimentação + evento.</li><li>Regras de concorrência em transferência simultânea.</li><li>Consultas de analytics sem travar operacional.</li><li>Matriz de garantias por caso de uso.</li></ul></section>
-              </div>
-              <div class="refs">
-                <article class="ref"><div class="thumb data">Transaction Isolation<div class="sub">PostgreSQL oficial</div></div><div class="ref-body"><strong>Isolation levels</strong><p>Comportamento exato de transações no Postgres.</p><a href="https://www.postgresql.org/docs/current/transaction-iso.html" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb data">JSONB<div class="sub">Schema flexível</div></div><div class="ref-body"><strong>JSON types</strong><p>Uso correto de JSONB no banco.</p><a href="https://www.postgresql.org/docs/current/datatype-json.html" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb data">JSON Functions<div class="sub">Consulta e transformação</div></div><div class="ref-body"><strong>JSON operators/functions</strong><p>Manipulação eficiente de payloads JSON.</p><a href="https://www.postgresql.org/docs/current/functions-json.html" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb video">Vídeos PT-BR<div class="sub">Postgres avançado</div></div><div class="ref-body"><strong>YouTube PT-BR (busca)</strong><p>Aulas em português sobre transações e locking.</p><a href="https://www.youtube.com/results?search_query=postgresql+transacoes+lock+portugues" target="_blank" rel="noopener noreferrer">Abrir vídeos PT-BR</a></div></article>
-              </div>
-            </div>
-          </details>
-
-          <details class="module">
-            <summary>
-              <h3>Etapa C — Arquitetura orientada a eventos</h3>
-              <span class="meta">Fundação para IA e Contábil consumirem o WMS sem acoplamento frágil.</span>
-            </summary>
-            <div class="module-body">
-              <div class="split">
-                <section class="box"><h4>O que dominar</h4><ul><li>Transactional Outbox.</li><li>Idempotent consumer.</li><li>Retry/backoff e DLQ.</li><li>Versionamento de evento.</li></ul></section>
-                <section class="box"><h4>Aplicação no Jade-stock</h4><ul><li>WMS publica fatos imutáveis.</li><li>Contábil consome e lança sem tocar saldo do WMS.</li><li>IA consome histórico para previsão e recomendação.</li><li>Falha não pode quebrar trilha auditável.</li></ul></section>
-              </div>
-              <div class="refs">
-                <article class="ref"><div class="thumb docs">Event Sourcing<div class="sub">Conceito base</div></div><div class="ref-body"><strong>Martin Fowler</strong><p>Panorama de vantagens e tradeoffs.</p><a href="https://martinfowler.com/eaaDev/EventSourcing.html" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb docs">Outbox Pattern<div class="sub">Integridade de publicação</div></div><div class="ref-body"><strong>Transactional Outbox</strong><p>Evita perder evento entre DB e broker.</p><a href="https://microservices.io/patterns/data/transactional-outbox" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb docs">Idempotent Consumer<div class="sub">Entrega duplicada segura</div></div><div class="ref-body"><strong>Idempotência no consumo</strong><p>Protege consistência sob reentrega.</p><a href="https://microservices.io/patterns/communication-style/idempotent-consumer.html" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb video">Vídeos PT-BR<div class="sub">Event-driven</div></div><div class="ref-body"><strong>YouTube PT-BR (busca)</strong><p>Conteúdo em português sobre eventos e mensageria.</p><a href="https://www.youtube.com/results?search_query=arquitetura+orientada+a+eventos+portugues" target="_blank" rel="noopener noreferrer">Abrir vídeos PT-BR</a></div></article>
-              </div>
-            </div>
-          </details>
-
-          <details class="module">
-            <summary>
-              <h3>Etapa D — Estatística aplicada (ARIMA/SARIMA)</h3>
-              <span class="meta">Base obrigatória antes de rede neural: previsão explicável e benchmark honesto.</span>
-            </summary>
-            <div class="module-body">
-              <div class="split">
-                <section class="box"><h4>O que dominar</h4><ul><li>Tendência, sazonalidade e ruído.</li><li>Stationarity e diferenciação.</li><li>ACF/PACF e diagnóstico.</li><li>Métricas: MAE, RMSE, MAPE, WAPE.</li></ul></section>
-                <section class="box"><h4>Aplicação no Jade-stock</h4><ul><li>Baseline por SKU/local/período.</li><li>Comparar baseline ingênuo vs ARIMA.</li><li>Publicar recomendação, não execução.</li><li>Versionar método e janela de treino.</li></ul></section>
-              </div>
-              <div class="refs">
-                <article class="ref"><div class="thumb data">Forecasting Book<div class="sub">FPP3</div></div><div class="ref-body"><strong>Forecasting: Principles and Practice</strong><p>Livro de referência para forecast sério.</p><a href="https://otexts.com/fpp3/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb data">statsmodels ARIMA<div class="sub">Implementação Python</div></div><div class="ref-body"><strong>Documentação ARIMA</strong><p>Parâmetros e uso do modelo ARIMA em Python.</p><a href="https://www.statsmodels.org/stable/generated/statsmodels.tsa.arima.model.ARIMA.html" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb data">StatsForecast<div class="sub">Escala e AutoARIMA</div></div><div class="ref-body"><strong>Nixtla StatsForecast</strong><p>Ferramental para forecast estatístico em escala.</p><a href="https://nixtlaverse.nixtla.io/statsforecast/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb video">Vídeos PT-BR<div class="sub">Séries temporais</div></div><div class="ref-body"><strong>YouTube PT-BR (busca)</strong><p>Conteúdo em português de ARIMA/séries temporais.</p><a href="https://www.youtube.com/results?search_query=arima+s%C3%A9ries+temporais+portugu%C3%AAs" target="_blank" rel="noopener noreferrer">Abrir vídeos PT-BR</a></div></article>
-              </div>
-            </div>
-          </details>
-
-          <details class="module">
-            <summary>
-              <h3>Etapa E — Rede neural para forecast sem hype</h3>
-              <span class="meta">Modelo neural só entra quando superar baseline estatístico com estabilidade.</span>
-            </summary>
-            <div class="module-body">
-              <div class="split">
-                <section class="box"><h4>O que dominar</h4><ul><li>N-BEATS, N-HiTS, TFT (visão de produto).</li><li>Features exógenas e calendários.</li><li>Overfitting, drift, recalibração.</li><li>Previsão probabilística e risco.</li></ul></section>
-                <section class="box"><h4>Aplicação no Jade-stock</h4><ul><li>Comparação objetiva contra ARIMA/baseline.</li><li>Registro de `model_version` e métricas.</li><li>Fallback automático para modelo simples.</li><li>Nenhuma escrita direta no saldo.</li></ul></section>
-              </div>
-              <div class="refs">
-                <article class="ref"><div class="thumb data">NeuralForecast<div class="sub">Nixtla</div></div><div class="ref-body"><strong>NeuralForecast docs</strong><p>Modelos neurais para séries temporais.</p><a href="https://nixtlaverse.nixtla.io/neuralforecast/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb data">PyTorch Forecasting<div class="sub">Toolkit</div></div><div class="ref-body"><strong>PyTorch Forecasting</strong><p>Treino e avaliação de modelos de forecast.</p><a href="https://pytorch-forecasting.readthedocs.io/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb data">GluonTS<div class="sub">Probabilístico</div></div><div class="ref-body"><strong>GluonTS</strong><p>Ecossistema de séries temporais probabilísticas.</p><a href="https://ts.gluon.ai/stable/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb video">Vídeos PT-BR<div class="sub">Redes neurais explicadas</div></div><div class="ref-body"><strong>YouTube PT-BR (busca)</strong><p>Base em português para consolidar fundamentos neurais.</p><a href="https://www.youtube.com/results?search_query=redes+neurais+portugues+introducao" target="_blank" rel="noopener noreferrer">Abrir vídeos PT-BR</a></div></article>
-              </div>
-            </div>
-          </details>
-
-          <details class="module">
-            <summary>
-              <h3>Etapa F — MLOps e governança de modelos</h3>
-              <span class="meta">Rastreabilidade de experimento, produção e rollback sem improviso.</span>
-            </summary>
-            <div class="module-body">
-              <div class="split">
-                <section class="box"><h4>O que dominar</h4><ul><li>Tracking de experimento.</li><li>Versionamento de modelo e dataset.</li><li>Critério de promoção/rollback.</li><li>Auditoria do output da IA.</li></ul></section>
-                <section class="box"><h4>Aplicação no Jade-stock</h4><ul><li>Saída sempre com metadados versionados.</li><li>Checklist de promoção para produção.</li><li>Fallback e proteção operacional.</li><li>Registro por `correlation_id`.</li></ul></section>
-              </div>
-              <div class="refs">
-                <article class="ref"><div class="thumb docs">MLflow<div class="sub">Tracking</div></div><div class="ref-body"><strong>MLflow Tracking</strong><p>Rastrear execuções, parâmetros e métricas.</p><a href="https://www.mlflow.org/docs/latest/ml/tracking" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb docs">DVC<div class="sub">Versionamento de dados</div></div><div class="ref-body"><strong>DVC</strong><p>Controle de dados/modelos com disciplina de engenharia.</p><a href="https://dvc.org/doc/user-guide/what-is-dvc" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb video">Vídeos PT-BR<div class="sub">MLOps</div></div><div class="ref-body"><strong>YouTube PT-BR (busca)</strong><p>Trilha em português para MLOps e deploy de modelos.</p><a href="https://www.youtube.com/results?search_query=mlops+portugues" target="_blank" rel="noopener noreferrer">Abrir vídeos PT-BR</a></div></article>
-              </div>
-            </div>
-          </details>
-
-          <details class="module">
-            <summary>
-              <h3>Etapa G — Contábil orientado a eventos</h3>
-              <span class="meta">Transformar fatos de estoque em lançamentos auditáveis e reconciliáveis.</span>
-            </summary>
-            <div class="module-body">
-              <div class="split">
-                <section class="box"><h4>O que dominar (escopo robusto)</h4><ul><li>Partidas dobradas, plano de contas e natureza das contas.</li><li>Demonstrações: BP, DRE, DFC, DMPL e notas explicativas.</li><li>Fechamento contábil mensal e anual.</li><li>Contabilidade de custos e controladoria.</li><li>Auditoria contábil e controles internos.</li><li>Tributário aplicado (impactos por operação).</li><li>Conciliação operacional x contábil.</li></ul></section>
-                <section class="box"><h4>Aplicação no Jade-stock</h4><ul><li>Tabela de mapeamento `evento_wms -> lançamento` versionada.</li><li>Livro razão por evento com `correlation_id`.</li><li>Base automática para DRE por período e categoria.</li><li>Estrutura para BP e DFC a partir dos lançamentos.</li><li>Consumer contábil com retry + DLQ.</li><li>Relatório de divergência e reconciliação.</li><li>Trilha de auditoria ponta a ponta.</li></ul></section>
-              </div>
-              <div class="grid-3">
-                <article class="tile"><strong>Módulo Contábil 1</strong>Fundamentos e plano de contas. Entrega: matriz de lançamentos do WMS.</article>
-                <article class="tile"><strong>Módulo Contábil 2</strong>DRE, BP, DFC, DMPL. Entrega: estrutura de reports financeiros.</article>
-                <article class="tile"><strong>Módulo Contábil 3</strong>Auditoria e controles internos. Entrega: checklist de conformidade.</article>
-                <article class="tile"><strong>Módulo Contábil 4</strong>Custos, margem e controladoria. Entrega: visão gerencial por SKU/categoria.</article>
-                <article class="tile"><strong>Módulo Contábil 5</strong>Tributário aplicado. Entrega: mapa de impacto tributário por evento.</article>
-                <article class="tile"><strong>Módulo Contábil 6</strong>Fechamento e reconciliação. Entrega: rotina mensal auditável.</article>
-              </div>
-              <div class="refs">
-                <article class="ref"><div class="thumb docs">IAS 1<div class="sub">Financial Statements</div></div><div class="ref-body"><strong>IAS 1</strong><p>Apresentação das demonstrações financeiras (inclui DRE/BP).</p><a href="https://www.ifrs.org/issued-standards/list-of-standards/ias-1-presentation-of-financial-statements/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb docs">IAS 7<div class="sub">Cash Flows</div></div><div class="ref-body"><strong>IAS 7</strong><p>Fundamento para DFC (fluxo de caixa).</p><a href="https://www.ifrs.org/issued-standards/list-of-standards/ias-7-statement-of-cash-flows/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb docs">IAS 2<div class="sub">Inventories</div></div><div class="ref-body"><strong>IAS 2</strong><p>Base internacional para tratamento de estoque.</p><a href="https://www.ifrs.org/issued-standards/list-of-standards/ias-2-inventories/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb docs">Normas CFC<div class="sub">Brasil</div></div><div class="ref-body"><strong>CFC - normas completas</strong><p>Normas brasileiras para aderência local.</p><a href="https://portalrestore.cfc.org.br/tecnica/normas-brasileiras-de-contabilidade/normas-completas/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb docs">CPC<div class="sub">Pronunciamentos</div></div><div class="ref-body"><strong>CPC oficial</strong><p>Material normativo de apoio ao desenho contábil.</p><a href="https://www.cpc.org.br/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb docs">CVM Dados<div class="sub">DFP/ITR</div></div><div class="ref-body"><strong>CVM - dados abertos</strong><p>Base real para estudar demonstrações financeiras brasileiras.</p><a href="https://dados.cvm.gov.br/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb video">Vídeos PT-BR<div class="sub">DRE, BP e DFC</div></div><div class="ref-body"><strong>YouTube PT-BR (demonstrações)</strong><p>Aulas em português de DRE, balanço e fluxo de caixa.</p><a href="https://www.youtube.com/results?search_query=dre+balanco+patrimonial+dfc+portugues" target="_blank" rel="noopener noreferrer">Abrir vídeos PT-BR</a></div></article>
-                <article class="ref"><div class="thumb video">Vídeos PT-BR<div class="sub">Auditoria contábil</div></div><div class="ref-body"><strong>YouTube PT-BR (auditoria)</strong><p>Fundamentos e prática de auditoria contábil.</p><a href="https://www.youtube.com/results?search_query=auditoria+contabil+portugues" target="_blank" rel="noopener noreferrer">Abrir vídeos PT-BR</a></div></article>
-                <article class="ref"><div class="thumb video">Vídeos PT-BR<div class="sub">Custos e controladoria</div></div><div class="ref-body"><strong>YouTube PT-BR (custos/controladoria)</strong><p>Base gerencial para margens, orçamento e decisão.</p><a href="https://www.youtube.com/results?search_query=contabilidade+de+custos+controladoria+portugues" target="_blank" rel="noopener noreferrer">Abrir vídeos PT-BR</a></div></article>
-              </div>
-            </div>
-          </details>
-
-          <details class="module">
-            <summary>
-              <h3>Etapa H — IAM, OAuth2/OIDC, tenant e licença</h3>
-              <span class="meta">Segurança de acesso e modelo comercial sem acoplar lógica no cliente.</span>
-            </summary>
-            <div class="module-body">
-              <div class="split">
-                <section class="box"><h4>O que dominar</h4><ul><li>AuthN vs AuthZ sem confusão.</li><li>OAuth2, OIDC e PKCE.</li><li>Roles, escopos e permissões por tenant.</li><li>Licença e feature flag por plano.</li></ul></section>
-                <section class="box"><h4>Aplicação no Jade-stock</h4><ul><li>API bloqueia por token/escopo.</li><li>Matriz de acesso por perfil de negócio.</li><li>Controle de módulo por licença ativa.</li><li>Auditoria para ações sensíveis.</li></ul></section>
-              </div>
-              <div class="refs">
-                <article class="ref"><div class="thumb api">OAuth2 RFC 6749<div class="sub">Padrão base</div></div><div class="ref-body"><strong>RFC 6749</strong><p>Especificação do OAuth2.</p><a href="https://datatracker.ietf.org/doc/html/rfc6749" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb api">PKCE RFC 7636<div class="sub">Segurança</div></div><div class="ref-body"><strong>RFC 7636</strong><p>Proteção de fluxo para apps clientes.</p><a href="https://www.rfc-editor.org/rfc/rfc7636" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb api">OIDC Core<div class="sub">Identidade</div></div><div class="ref-body"><strong>OpenID Connect Core</strong><p>Padrão de autenticação de identidade.</p><a href="https://openid.net/specs/openid-connect-core-1_0.html" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb video">Vídeos PT-BR<div class="sub">OAuth2 explicado</div></div><div class="ref-body"><strong>YouTube PT-BR (busca)</strong><p>Explicação em português de OAuth2/OIDC.</p><a href="https://www.youtube.com/results?search_query=oauth2+openid+connect+portugues" target="_blank" rel="noopener noreferrer">Abrir vídeos PT-BR</a></div></article>
-              </div>
-            </div>
-          </details>
-
-          <details class="module">
-            <summary>
-              <h3>Etapa I — Observabilidade e operação contínua</h3>
-              <span class="meta">Saúde do sistema visível em tempo real, com resposta rápida a incidentes.</span>
-            </summary>
-            <div class="module-body">
-              <div class="split">
-                <section class="box"><h4>O que dominar</h4><ul><li>Logs estruturados por `correlation_id`.</li><li>Métricas de latência, erro e throughput.</li><li>Tracing e causalidade de falhas.</li><li>SLO/alertas com runbook.</li></ul></section>
-                <section class="box"><h4>Aplicação no Jade-stock</h4><ul><li>Dashboard mínimo operacional.</li><li>Alertas acionáveis por módulo.</li><li>Playbook por tipo de incidente.</li><li>Medição contínua de disponibilidade.</li></ul></section>
-              </div>
-              <div class="refs">
-                <article class="ref"><div class="thumb docs">OpenTelemetry<div class="sub">Tracing/métricas/logs</div></div><div class="ref-body"><strong>OpenTelemetry Python</strong><p>Instrumentação padrão para backend.</p><a href="https://opentelemetry.io/docs/languages/python/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb docs">Prometheus<div class="sub">Métricas</div></div><div class="ref-body"><strong>Prometheus</strong><p>Monitoramento de séries de métricas.</p><a href="https://prometheus.io/docs/tutorials/getting_started/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb docs">Grafana<div class="sub">Dashboard</div></div><div class="ref-body"><strong>Grafana Dashboards</strong><p>Visualização operacional dos indicadores.</p><a href="https://grafana.com/docs/grafana/latest/dashboards/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb video">Vídeos PT-BR<div class="sub">Observabilidade</div></div><div class="ref-body"><strong>YouTube PT-BR (busca)</strong><p>Conteúdo em português para observabilidade prática.</p><a href="https://www.youtube.com/results?search_query=observabilidade+prometheus+grafana+portugues" target="_blank" rel="noopener noreferrer">Abrir vídeos PT-BR</a></div></article>
-              </div>
-            </div>
-          </details>
-        </section>
-
-        <section class="card" id="plano">
-          <h2>Plano de 12 semanas (execução incremental)</h2>
-          <div class="grid-4">
-            <article class="tile"><strong>Semanas 1-3</strong><span class="badge ok">Base</span><br />API madura + Postgres + event-driven.</article>
-            <article class="tile"><strong>Semanas 4-7</strong><span class="badge ok">Dados</span><br />ARIMA/SARIMA + neural forecast + MLOps.</article>
-            <article class="tile"><strong>Semanas 8-10</strong><span class="badge warn">Financeiro</span><br />Contábil por eventos + reconciliação.</article>
-            <article class="tile"><strong>Semanas 11-12</strong><span class="badge warn">Produção</span><br />IAM + observabilidade + hardening.</article>
-          </div>
-        </section>
-
-        <section class="card" id="dicionario">
-          <h2>Dicionário anti-WTF</h2>
-          <div class="grid-4">
-            <article class="tile"><strong>ARIMA/SARIMA</strong>Modelos estatísticos para previsão temporal.</article>
-            <article class="tile"><strong>Outbox</strong>Padrão para publicar evento com consistência transacional.</article>
-            <article class="tile"><strong>Idempotência</strong>Repetição segura sem duplicar efeito.</article>
-            <article class="tile"><strong>DLQ</strong>Destino de mensagens que falharam após retries.</article>
-            <article class="tile"><strong>MLOps</strong>Operação de modelos com governança em produção.</article>
-            <article class="tile"><strong>Tenant</strong>Isolamento lógico por cliente.</article>
-            <article class="tile"><strong>OIDC</strong>Camada de identidade sobre OAuth2.</article>
-            <article class="tile"><strong>SLO</strong>Meta técnica que representa saúde do serviço.</article>
-          </div>
-        </section>
-
-        <section class="card" id="metodo">
-          <h2>Método de estudo (TDAH-friendly)</h2>
-          <div class="split">
-            <section class="box">
-              <h4>Regra 60/30/10</h4>
-              <ul>
-                <li>60%: problema de negócio e decisão.</li>
-                <li>30%: padrão de arquitetura.</li>
-                <li>10%: detalhe de implementação.</li>
-              </ul>
-            </section>
-            <section class="box">
-              <h4>Ciclo semanal</h4>
-              <ol>
-                <li>Escolha 1 módulo do acordeão.</li>
-                <li>Consuma 2-4 referências.</li>
-                <li>Escreva resumo em linguagem de produto.</li>
-                <li>Faça 1 experimento no Jade-stock.</li>
-              </ol>
-            </section>
-          </div>
-          <p class="mini">
-            Nota de design: esta página usa princípios do Fluent 2 (tokens, hierarquia de superfície, legibilidade, contraste e estrutura por blocos).
-            Referências: <a href="https://fluent2.microsoft.design/" target="_blank" rel="noopener noreferrer">Fluent 2</a>,
-            <a href="https://fluent2.microsoft.design/design-tokens" target="_blank" rel="noopener noreferrer">Design Tokens</a>,
-            <a href="https://fluent2.microsoft.design/typography" target="_blank" rel="noopener noreferrer">Typography</a>.
-          </p>
-          <div class="legend">
-            <span class="badge ok">Conteúdo operacional</span>
-            <span class="badge warn">Conteúdo estratégico</span>
-            <span class="badge risk">Risco de produção se ignorar</span>
-          </div>
-        </section>
-      </main>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jade-stock Learning Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --jade:      #1a6b47;
+      --jade-lt:   #d1fae5;
+      --jade-mid:  #10b981;
+      --ink:       #0d1117;
+      --ink-2:     #3d4451;
+      --ink-3:     #6b7280;
+      --surface:   #ffffff;
+      --surface-2: #f8fafc;
+      --surface-3: #f1f5f9;
+      --border:    #e2e8f0;
+      --border-2:  #cbd5e1;
+
+      /* Trilha colours */
+      --base:    #1d4ed8;   --base-lt:    #dbeafe;
+      --dados:   #7c3aed;   --dados-lt:   #ede9fe;
+      --fin:     #b45309;   --fin-lt:     #fef3c7;
+      --prod:    #065f46;   --prod-lt:    #d1fae5;
+
+      --r: 12px;
+      --r-lg: 20px;
+      --shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 12px rgba(0,0,0,.06);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,.10);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "DM Sans", system-ui, sans-serif;
+      background: #f0f4f8;
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    /* ── TOP BAR ─────────────────────────────────── */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255,255,255,.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .topbar-logo {
+      font-family: "Syne", sans-serif;
+      font-weight: 800;
+      font-size: 17px;
+      color: var(--jade);
+      white-space: nowrap;
+    }
+    .topbar-logo span { color: var(--ink-3); font-weight: 700; }
+    .topbar-nav {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      flex: 1;
+    }
+    .topbar-nav::-webkit-scrollbar { display: none; }
+    .topbar-nav a {
+      text-decoration: none;
+      color: var(--ink-2);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 6px 10px;
+      border-radius: 8px;
+      white-space: nowrap;
+      transition: background .15s, color .15s;
+    }
+    .topbar-nav a:hover { background: var(--surface-3); color: var(--ink); }
+
+    /* ── LAYOUT ──────────────────────────────────── */
+    .layout {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* ── HERO ────────────────────────────────────── */
+    .hero {
+      background: var(--ink);
+      border-radius: var(--r-lg);
+      padding: 40px 40px 36px;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 600px 300px at -10% 120%, rgba(16,185,129,.25) 0%, transparent 70%),
+        radial-gradient(ellipse 500px 400px at 110% -20%, rgba(29,78,216,.20) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 999px;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--jade-mid);
+      margin-bottom: 16px;
+    }
+    .hero h1 {
+      font-family: "Syne", sans-serif;
+      font-size: clamp(26px, 4vw, 40px);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 14px;
+    }
+    .hero-sub {
+      font-size: 16px;
+      line-height: 1.65;
+      color: rgba(255,255,255,.72);
+      max-width: 680px;
+      margin-bottom: 24px;
+    }
+    .chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .chip {
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255,255,255,.88);
+    }
+
+    /* ── SECTION HEADER ──────────────────────────── */
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .section-header h2 {
+      font-family: "Syne", sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+    }
+    .section-header .sub {
+      font-size: 14px;
+      color: var(--ink-3);
+    }
+
+    /* ── CARD ────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    /* ── TRILHAS ─────────────────────────────────── */
+    .trilha-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+    }
+    .trilha {
+      border-radius: var(--r);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .trilha.t1 { background: var(--base-lt); border: 1px solid #bfdbfe; }
+    .trilha.t2 { background: var(--dados-lt); border: 1px solid #ddd6fe; }
+    .trilha.t3 { background: var(--prod-lt); border: 1px solid #a7f3d0; }
+    .trilha-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      padding: 3px 8px;
+      border-radius: 999px;
+      margin-bottom: 4px;
+      width: fit-content;
+    }
+    .t1 .trilha-badge { background: var(--base); color: #fff; }
+    .t2 .trilha-badge { background: var(--dados); color: #fff; }
+    .t3 .trilha-badge { background: var(--prod); color: #fff; }
+    .trilha strong { font-size: 15px; font-weight: 600; }
+    .trilha p { font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
+    .trilha .focus { font-size: 12px; color: var(--ink-3); font-style: italic; margin-top: 4px; }
+
+    /* ── MAPA DE CONCEITOS ───────────────────────── */
+    .mapa-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+    }
+    .mapa-col { display: flex; flex-direction: column; gap: 8px; }
+    .mapa-col-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      padding: 6px 10px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .mapa-col-title.c { background: #fff7ed; color: #92400e; }
+    .mapa-col-title.e { background: #f5f3ff; color: #5b21b6; }
+    .mapa-col-title.i { background: #ecfdf5; color: #065f46; }
+    .mapa-item {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 13.5px;
+      color: var(--ink-2);
+      line-height: 1.45;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .mapa-item::before {
+      content: "→";
+      color: var(--jade-mid);
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* ── PLANO 12 SEMANAS ────────────────────────── */
+    .plano-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .plano-card {
+      border-radius: var(--r);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .plano-card.p1 { background: var(--base-lt); border: 1px solid #bfdbfe; }
+    .plano-card.p2 { background: var(--dados-lt); border: 1px solid #ddd6fe; }
+    .plano-card.p3 { background: var(--fin-lt); border: 1px solid #fde68a; }
+    .plano-card.p4 { background: var(--prod-lt); border: 1px solid #a7f3d0; }
+    .plano-card .semanas {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--ink-3);
+    }
+    .plano-card strong {
+      font-family: "Syne", sans-serif;
+      font-size: 17px;
+      font-weight: 800;
+    }
+    .p1 strong { color: var(--base); }
+    .p2 strong { color: var(--dados); }
+    .p3 strong { color: var(--fin); }
+    .p4 strong { color: var(--prod); }
+    .plano-card p { font-size: 13px; color: var(--ink-2); line-height: 1.45; }
+    .plano-card .etapas-ref {
+      font-size: 11.5px;
+      color: var(--ink-3);
+      margin-top: 4px;
+      font-family: "DM Mono", monospace;
+    }
+
+    /* ── DICIONÁRIO ──────────────────────────────── */
+    .dict-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 10px;
+    }
+    .dict-item {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 14px;
+    }
+    .dict-item strong {
+      display: block;
+      font-family: "DM Mono", monospace;
+      font-size: 13px;
+      color: var(--jade);
+      margin-bottom: 5px;
+    }
+    .dict-item p { font-size: 13.5px; color: var(--ink-2); line-height: 1.5; }
+
+    /* ── MÉTODO ──────────────────────────────────── */
+    .metodo-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .metodo-box {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 18px;
+    }
+    .metodo-box h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--jade);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .metodo-box ul, .metodo-box ol {
+      padding-left: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .metodo-box li { font-size: 14px; color: var(--ink-2); line-height: 1.5; }
+
+    /* ── MODULE ACCORDION ────────────────────────── */
+    .modules-list { display: flex; flex-direction: column; gap: 10px; }
+
+    details.module {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      transition: box-shadow .2s;
+    }
+    details.module[open] {
+      box-shadow: var(--shadow-lg);
+      border-color: var(--border-2);
+    }
+
+    details.module summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      user-select: none;
+      transition: background .15s;
+    }
+    details.module summary:hover { background: var(--surface-2); }
+    details.module summary::-webkit-details-marker { display: none; }
+
+    .module-num {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "Syne", sans-serif;
+      font-weight: 800;
+      font-size: 14px;
+      flex-shrink: 0;
+      color: #fff;
+    }
+    .num-base  { background: var(--base); }
+    .num-dados { background: var(--dados); }
+    .num-fin   { background: var(--fin); }
+    .num-prod  { background: var(--prod); }
+
+    .module-summary-text { flex: 1; }
+    .module-summary-text h3 {
+      font-family: "Syne", sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 3px;
+    }
+    .module-summary-text .meta {
+      font-size: 13px;
+      color: var(--ink-3);
+    }
+
+    .module-chevron {
+      width: 22px;
+      height: 22px;
+      color: var(--ink-3);
+      transition: transform .25s;
+      flex-shrink: 0;
+    }
+    details[open] .module-chevron { transform: rotate(180deg); }
+
+    .module-tag {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      padding: 3px 8px;
+      border-radius: 999px;
+      flex-shrink: 0;
+    }
+    .tag-base  { background: var(--base-lt);  color: var(--base); }
+    .tag-dados { background: var(--dados-lt); color: var(--dados); }
+    .tag-fin   { background: var(--fin-lt);   color: var(--fin); }
+    .tag-prod  { background: var(--prod-lt);  color: var(--prod); }
+
+    /* ── MODULE BODY ─────────────────────────────── */
+    .module-body {
+      padding: 0 24px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── 30-SEC CALLOUT ──────────────────────────── */
+    .callout-30 {
+      margin-top: 20px;
+      background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+      border: 1px solid #a7f3d0;
+      border-left: 4px solid var(--jade-mid);
+      border-radius: var(--r);
+      padding: 16px 18px;
+    }
+    .callout-30 .label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--jade);
+      margin-bottom: 6px;
+    }
+    .callout-30 p {
+      font-size: 14px;
+      color: var(--ink-2);
+      line-height: 1.65;
+    }
+
+    /* ── SPLIT (dominar / aplicação) ─────────────── */
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .box {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 16px;
+    }
+    .box h4 {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--ink-3);
+      margin-bottom: 12px;
+    }
+    .box ul, .box ol {
+      padding-left: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .box li {
+      font-size: 14px;
+      color: var(--ink-2);
+      line-height: 1.55;
+    }
+    .box li code {
+      font-family: "DM Mono", monospace;
+      font-size: 12.5px;
+      background: rgba(0,0,0,.06);
+      border-radius: 4px;
+      padding: 1px 5px;
+    }
+
+    /* ── REFS GRID ───────────────────────────────── */
+    .refs-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--ink-3);
+      margin-bottom: 10px;
+    }
+    .refs {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 10px;
+    }
+    .ref {
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      overflow: hidden;
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      transition: box-shadow .15s, transform .15s;
+    }
+    .ref:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,.10);
+      transform: translateY(-2px);
+    }
+    .thumb {
+      min-height: 80px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      gap: 3px;
+      font-weight: 800;
+      font-size: 14px;
+      color: #fff;
+    }
+    .thumb .sub {
+      font-size: 11px;
+      font-weight: 600;
+      opacity: .85;
+    }
+    .thumb.docs  { background: linear-gradient(135deg, #16a34a, #14532d); }
+    .thumb.video { background: linear-gradient(135deg, #ef4444, #7f1d1d); }
+    .thumb.data  { background: linear-gradient(135deg, #7c3aed, #3b0764); }
+    .thumb.api   { background: linear-gradient(135deg, #0284c7, #0c4a6e); }
+    .thumb.fin   { background: linear-gradient(135deg, #d97706, #78350f); }
+    .ref-body { padding: 12px 14px; flex: 1; display: flex; flex-direction: column; gap: 5px; }
+    .ref-body strong { font-size: 13.5px; font-weight: 600; }
+    .ref-body p { font-size: 13px; color: var(--ink-3); line-height: 1.5; flex: 1; }
+    .ref-body a {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--base);
+      text-decoration: none;
+    }
+    .ref-body a:hover { text-decoration: underline; }
+
+    /* ── SUB-MODULE (para Contábil) ──────────────── */
+    .sub-modules { display: flex; flex-direction: column; gap: 8px; }
+    details.sub-module {
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      overflow: hidden;
+    }
+    details.sub-module summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface-2);
+      user-select: none;
+    }
+    details.sub-module summary::-webkit-details-marker { display: none; }
+    .sub-num {
+      width: 28px;
+      height: 28px;
+      background: var(--fin);
+      color: #fff;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    .sub-module-text { flex: 1; }
+    .sub-module-text strong { font-size: 14px; font-weight: 600; display: block; }
+    .sub-module-text .sub-meta { font-size: 12.5px; color: var(--ink-3); }
+    .sub-module-body {
+      padding: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .sub-module-body .callout-30 { margin-top: 0; }
+
+    /* ── ALERT BOX ───────────────────────────────── */
+    .alert {
+      border-radius: var(--r);
+      padding: 12px 16px;
+      font-size: 13.5px;
+      line-height: 1.55;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .alert.warn {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      color: #92400e;
+    }
+    .alert.info {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e40af;
+    }
+    .alert-icon { font-size: 16px; flex-shrink: 0; }
+
+    /* ── LEGEND ──────────────────────────────────── */
+    .legend {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      padding: 14px 16px;
+      background: var(--surface-2);
+      border-radius: var(--r);
+      border: 1px solid var(--border);
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12.5px;
+      color: var(--ink-2);
+    }
+    .legend-dot {
+      width: 10px; height: 10px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    /* ── RESPONSIVE ──────────────────────────────── */
+    @media (max-width: 700px) {
+      .split { grid-template-columns: 1fr; }
+      .metodo-grid { grid-template-columns: 1fr; }
+      .hero { padding: 28px 22px 24px; }
+      .module-body { padding: 0 16px 20px; }
+      details.module summary { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <nav class="topbar">
+    <div class="topbar-logo">Jade-stock <span>/ Learning Hub</span></div>
+    <div class="topbar-nav">
+      <a href="#trilhas">Trilhas</a>
+      <a href="#mapa">Mapa de Conceitos</a>
+      <a href="#modulos">Módulos</a>
+      <a href="#plano">12 Semanas</a>
+      <a href="#dicionario">Dicionário</a>
+      <a href="#metodo">Método</a>
     </div>
-  </body>
+  </nav>
+
+  <div class="layout">
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-eyebrow">Jade-stock Learning Hub</div>
+      <h1>Guia Visual de Estudos<br>API · IA · Contábil · IAM</h1>
+      <p class="hero-sub">
+        Você já fechou a base WMS — 91 testes passando, release gate verde, idempotência validada.
+        Este guia cobre os próximos blocos: API pública robusta, previsão estatística e neural,
+        contábil por eventos e autenticação segura. A proposta é estudar com profundidade,
+        em ciclos curtos, sempre conectando o conceito ao que vai acontecer no código do Jade-stock.
+      </p>
+      <div class="chips">
+        <span class="chip">✦ API pública robusta</span>
+        <span class="chip">✦ Forecast estatístico e neural</span>
+        <span class="chip">✦ Contábil por eventos</span>
+        <span class="chip">✦ OAuth2/OIDC · tenant · licença</span>
+        <span class="chip">✦ Observabilidade e produção</span>
+      </div>
+    </section>
+
+    <!-- TRILHAS -->
+    <section class="card" id="trilhas">
+      <div class="section-header">
+        <h2>Trilhas por perfil</h2>
+        <span class="sub">escolha uma antes de começar o dia</span>
+      </div>
+      <div class="trilha-grid">
+        <article class="trilha t1">
+          <span class="trilha-badge">Prioridade 1 — Produto</span>
+          <strong>API de negócio e governança</strong>
+          <p>Entender o problema, o impacto operacional e os critérios de decisão <em>antes</em> de tocar no código. O Jade-stock precisa de contratos estáveis antes de escalar.</p>
+          <span class="focus">Etapas A, B e C</span>
+        </article>
+        <article class="trilha t2">
+          <span class="trilha-badge">Prioridade 2 — Dados / IA</span>
+          <strong>Forecast auditável e recomendação confiável</strong>
+          <p>Construir a base de previsão com método honesto: baseline simples → ARIMA → neural. Sem hype, sem pular etapas. Modelo que não bate baseline não vai para produção.</p>
+          <span class="focus">Etapas D, E e F</span>
+        </article>
+        <article class="trilha t3">
+          <span class="trilha-badge">Prioridade 3 — Operação</span>
+          <strong>Sistema sustentável para cliente real</strong>
+          <p>Segurança de acesso, monitoramento e resposta rápida a incidentes. O sistema só é real quando alguém além de você usa em produção sem travar.</p>
+          <span class="focus">Etapas G–J</span>
+        </article>
+      </div>
+    </section>
+
+    <!-- MAPA DE CONCEITOS -->
+    <section class="card" id="mapa">
+      <div class="section-header">
+        <h2>Mapa de conceitos</h2>
+        <span class="sub">o que você vai dominar em cada frente</span>
+      </div>
+      <div class="mapa-grid">
+        <div class="mapa-col">
+          <div class="mapa-col-title c">📒 Contábil</div>
+          <div class="mapa-item">Partidas dobradas e natureza das contas</div>
+          <div class="mapa-item">Plano de contas e lançamentos</div>
+          <div class="mapa-item">DRE, Balanço Patrimonial, DFC</div>
+          <div class="mapa-item">Auditoria e controles internos</div>
+          <div class="mapa-item">Contabilidade de custos e margem</div>
+          <div class="mapa-item">Tributário aplicado por operação</div>
+          <div class="mapa-item">Fechamento mensal e reconciliação</div>
+        </div>
+        <div class="mapa-col">
+          <div class="mapa-col-title e">📊 Estatística e IA</div>
+          <div class="mapa-item">Tendência, sazonalidade e ruído</div>
+          <div class="mapa-item">Stationarity, ACF/PACF e ARIMA/SARIMA</div>
+          <div class="mapa-item">Métricas: MAE, RMSE, MAPE, WAPE</div>
+          <div class="mapa-item">Janela temporal, horizonte e lookback</div>
+          <div class="mapa-item">Features exógenas (feriados, clima, eventos)</div>
+          <div class="mapa-item">Overfitting, drift e recalibração</div>
+          <div class="mapa-item">MLOps: versionamento e rollback de modelos</div>
+        </div>
+        <div class="mapa-col">
+          <div class="mapa-col-title i">🔐 API e Operação</div>
+          <div class="mapa-item">Semântica HTTP e status codes com propósito</div>
+          <div class="mapa-item">Idempotência, versionamento e deprecação</div>
+          <div class="mapa-item">Transactional Outbox e DLQ</div>
+          <div class="mapa-item">OAuth2, OIDC e PKCE</div>
+          <div class="mapa-item">Roles, escopos e permissões por tenant</div>
+          <div class="mapa-item">Logs estruturados e tracing por correlation_id</div>
+          <div class="mapa-item">SLOs, alertas e runbooks</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MÓDULOS -->
+    <section id="modulos">
+      <div class="section-header">
+        <h2>Módulos de estudo</h2>
+        <span class="sub">abra um por vez — estude, escreva, implemente</span>
+      </div>
+      <div class="alert info" style="margin-bottom:14px;">
+        <span class="alert-icon">💡</span>
+        <span>Regra de ouro: só abra o próximo módulo depois de escrever pelo menos um parágrafo explicando o anterior com suas próprias palavras. Se você não consegue explicar, ainda não aprendeu.</span>
+      </div>
+      <div class="legend" style="margin-bottom:14px;">
+        <span class="legend-item"><span class="legend-dot" style="background:var(--base)"></span>Base técnica</span>
+        <span class="legend-item"><span class="legend-dot" style="background:var(--dados)"></span>Dados e IA</span>
+        <span class="legend-item"><span class="legend-dot" style="background:var(--fin)"></span>Financeiro</span>
+        <span class="legend-item"><span class="legend-dot" style="background:var(--prod)"></span>Produção</span>
+      </div>
+      <div class="modules-list">
+
+        <!-- ETAPA A -->
+        <details class="module">
+          <summary>
+            <div class="module-num num-base">A</div>
+            <div class="module-summary-text">
+              <h3>API madura em produção</h3>
+              <span class="meta">Contrato externo estável, semântica HTTP, idempotência e versionamento</span>
+            </div>
+            <span class="module-tag tag-base">Base</span>
+            <svg class="module-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </summary>
+          <div class="module-body">
+            <div class="callout-30">
+              <div class="label">🧠 Por que isso importa para o Jade-stock</div>
+              <p>O WMS já tem API interna. Mas uma API pública — consumida pelo SDK, por parceiros e pelo cliente rico — precisa de regras mais rígidas: status codes que fazem sentido, erros com <code>correlation_id</code> para rastrear, versão explícita para não quebrar clientes antigos. Sem isso, cada mudança no backend vira uma dor de cabeça no front-end.</p>
+            </div>
+            <div class="split">
+              <section class="box">
+                <h4>O que dominar</h4>
+                <ul>
+                  <li>Semântica HTTP completa: quando usar 200, 201, 400, 409, 422, 503 — e por quê cada um existe.</li>
+                  <li>Padrão de erro com <code>error_code</code>, <code>message</code> e <code>correlation_id</code> em todos os endpoints.</li>
+                  <li>Idempotência via chave no header (<code>Idempotency-Key</code>) para operações críticas como pagamentos e lançamentos.</li>
+                  <li>Versionamento de API: path (<code>/v1/</code>) vs header. Como deprecar uma versão sem quebrar clientes.</li>
+                  <li>Paginação com cursor vs offset — e quando usar cada um.</li>
+                </ul>
+              </section>
+              <section class="box">
+                <h4>Aplicação no Jade-stock</h4>
+                <ul>
+                  <li>Padrão único de erro/retorno em todos endpoints v1 — hoje cada endpoint retorna diferente.</li>
+                  <li>SDK alinhado ao OpenAPI publicado: front-end nunca constrói request na mão.</li>
+                  <li>Paginação em endpoints que retornam listas de movimentações ou eventos históricos.</li>
+                  <li>Contrato de integração explícito para quando um parceiro consumir a API do Jade-stock.</li>
+                </ul>
+              </section>
+            </div>
+            <div>
+              <div class="refs-title">Referências e materiais</div>
+              <div class="refs">
+                <article class="ref">
+                  <div class="thumb api">RFC 9110<div class="sub">HTTP Semantics — oficial</div></div>
+                  <div class="ref-body">
+                    <strong>HTTP Semantics (RFC 9110)</strong>
+                    <p>O documento canônico que define o significado de cada método e status code HTTP. Não precisa ler tudo — leia a seção de status codes com calma.</p>
+                    <a href="https://www.rfc-editor.org/rfc/rfc9110#section-15" target="_blank" rel="noopener">Abrir referência</a>
+                  </div>
+                </article>
+                <article class="ref">
+                  <div class="thumb api">OpenAPI 3.1<div class="sub">Contrato técnico</div></div>
+                  <div class="ref-body">
+                    <strong>OpenAPI Specification</strong>
+                    <p>Formato padrão para descrever APIs REST. É com ele que você vai gerar documentação, validar requests e alinhar o SDK ao contrato da API.</p>
+                    <a href="https://spec.openapis.org/oas/v3.1.1.html" target="_blank" rel="noopener">Abrir referência</a>
+                  </div>
+                </article>
+                <article class="ref">
+                  <div class="thumb docs">API Guidelines<div class="sub">Microsoft — boas práticas</div></div>
+                  <div class="ref-body">
+                    <strong>Microsoft REST API Guidelines</strong>
+                    <p>Guia prático de decisões de design de API: nomeação, paginação, erros, versionamento. Muito mais acessível que a RFC.</p>
+                    <a href="https://github.com/microsoft/api-guidelines" target="_blank" rel="noopener">Abrir referência</a>
+                  </div>
+                </article>
+                <article class="ref">
+                  <div class="thumb video">Vídeos PT-BR<div class="sub">FastAPI e API REST</div></div>
+                  <div class="ref-body">
+                    <strong>FastAPI + REST em português</strong>
+                    <p>Aulas em português sobre como construir APIs REST com FastAPI, que é a stack do Jade-stock.</p>
+                    <a href="https://www.youtube.com/results?search_query=fastapi+portugues+api+rest+boas+praticas" target="_blank" rel="noopener">Buscar no YouTube PT-BR</a>
+                  </div>
+                </article>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <!-- ETAPA B -->
+        <details class="module">
+          <summary>
+            <div class="module-num num-base">B</div>
+            <div class="module-summary-text">
+              <h3>PostgreSQL — concorrência e consistência</h3>
+              <span class="meta">Travas transacionais para não corromper saldo nem duplicar eventos</span>
+            </div>
+            <span class="module-tag tag-base">Base</span>
+            <svg class="module-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </summary>
+          <div class="module-body">
+            <div class="callout-30">
+              <div class="label">🧠 Por que isso importa para o Jade-stock</div>
+              <p>O WMS já tem o teste <code>test_concorrencia_transferencia_sem_corrupcao_de_saldo</code> passando — o que significa que você já lida com concorrência. Mas você precisa entender <em>por que</em> aquele código funciona: qual isolation level está sendo usado, o que acontece se dois usuários tentam dar baixa no mesmo SKU ao mesmo tempo, e como o PostgreSQL resolve isso sem que você precise implementar nada manual.</p>
+            </div>
+            <div class="split">
+              <section class="box">
+                <h4>O que dominar</h4>
+                <ul>
+                  <li>Isolation levels: Read Committed (padrão), Repeatable Read e Serializable — o que muda em cada um.</li>
+                  <li>SELECT FOR UPDATE: como travar uma linha antes de modificar, evitando race condition de saldo.</li>
+                  <li>Deadlock: o que é, como detectar no log do Postgres e como evitar pela ordem de atualização.</li>
+                  <li>JSONB: como armazenar payloads de eventos com schema flexível e consultar eficientemente.</li>
+                  <li>Índices compostos: quando criar, qual ordem de colunas importa e como verificar se estão sendo usados.</li>
+                </ul>
+              </section>
+              <section class="box">
+                <h4>Aplicação no Jade-stock</h4>
+                <ul>
+                  <li>Atomicidade: saldo + movimentação + evento na mesma transação — já implementado, agora você entende o porquê.</li>
+                  <li>Índice em <code>(tenant_id, occurred_at DESC)</code> na <code>event_store.events</code> para consultas rápidas.</li>
+                  <li>Consultas de analytics (relatórios de IA) usando replicas de leitura para não travar o operacional.</li>
+                  <li>JSONB no campo <code>payload</code> dos eventos — com índice GIN para busca dentro do JSON.</li>
+                </ul>
+              </section>
+            </div>
+            <div>
+              <div class="refs-title">Referências e materiais</div>
+              <div class="refs">
+                <article class="ref">
+                  <div class="thumb data">Isolation Levels<div class="sub">PostgreSQL — oficial</div></div>
+                  <div class="ref-body">
+                    <strong>Transaction Isolation</strong>
+                    <p>Documentação oficial com a descrição exata do comportamento de cada nível de isolamento. Leia com calma — cada parágrafo é denso mas vale o tempo.</p>
+                    <a href="https://www.postgresql.org/docs/current/transaction-iso.html" target="_blank" rel="noopener">Abrir referência</a>
+                  </div>
+                </article>
+                <article class="ref">
+                  <div class="thumb data">JSONB<div class="sub">Tipos JSON no Postgres</div></div>
+                  <div class="ref-body">
+                    <strong>JSON Types (JSONB)</strong>
+                    <p>Como armazenar e consultar dados JSON no PostgreSQL de forma eficiente. Inclui índice GIN para busca dentro do JSON.</p>
+                    <a href="https://www.postgresql.org/docs/current/datatype-json.html" target="_blank" rel="noopener">Abrir referência</a>
+                  </div>
+                </article>
+                <article class="ref">
+                  <div class="thumb data">Índices<div class="sub">Postgres — guia de índices</div></div>
+                  <div class="ref-body">
+                    <strong>Indexes in PostgreSQL</strong>
+                    <p>Guia completo de tipos de índice, quando usar B-tree vs GIN vs BRIN, e como verificar com EXPLAIN ANALYZE.</p>
+                    <a href="https://www.postgresql.org/docs/current/indexes.html" target="_blank" rel="noopener">Abrir referência</a>
+                  </div>
+                </article>
+                <article class="ref">
+                  <div class="thumb video">Vídeos PT-BR<div class="sub">Postgres avançado</div></div>
+                  <div class="ref-body">
+                    <strong>Transações e locks em português</strong>
+                    <p>Aulas em português sobre transações, locking e performance no PostgreSQL.</p>
+                    <a href="https://www.youtube.com/results?search_query=postgresql+transacoes+lock+isolation+portugues" target="_blank" rel="noopener">Buscar no YouTube PT-BR</a>
+                  </div>
+                </article>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <!-- ETAPA C -->
+        <details class="module">
+          <summary>
+            <div class="module-num num-base">C</div>
+            <div class="module-summary-text">
+              <h3>Arquitetura orientada a eventos</h3>
+              <span class="meta">Fundação para IA e Contábil consumirem o WMS sem acoplamento frágil</span>
+            </div>
+            <span class="module-tag tag-base">Base</span>
+            <svg class="module-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </summary>
+          <div class="module-body">
+            <div class="callout-30">
+              <div class="label">🧠 Por que isso importa para o Jade-stock</div>
+              <p>A Event Store já existe na arquitetura do Jade-stock. O que você precisa entender agora é como garantir que um evento nunca se perca entre o banco e o consumidor (Outbox Pattern), como o módulo Contábil pode ser reiniciado sem processar eventos duas vezes (Idempotent Consumer), e o que acontece quando um evento falha repetidamente (Dead-Letter Queue).</p>
+            </div>
+            <div class="split">
+              <section class="box">
+                <h4>O que dominar</h4>
+                <ul>
+                  <li>Transactional Outbox: por que salvar o evento no banco na mesma transação que o dado — e só depois publicar.</li>
+                  <li>Idempotent Consumer: como garantir que processar o mesmo evento duas vezes não duplica o lançamento contábil.</li>
+                  <li>Retry com backoff exponencial: esperar 30s, 2min, 10min antes de desistir.</li>
+                  <li>Dead-Letter Queue (DLQ): onde vai o evento que falhou 5 vezes — e como reprocessar com segurança.</li>
+                  <li>Versionamento de evento: como adicionar campos ao payload sem quebrar consumidores antigos.</li>
+                </ul>
+              </section>
+              <section class="box">
+                <h4>Aplicação no Jade-stock</h4>
+                <ul>
+                  <li>WMS publica fatos imutáveis na <code>event_store.events</code> — nunca modifica, só insere.</li>
+                  <li>Contábil consome e lança sem tocar no saldo do WMS — separação total por schema.</li>
+                  <li>IA consome histórico de movimentações para treinar modelos de previsão.</li>
+                  <li>Evento com <code>status = 'dead_letter'</code> nunca é silenciosamente descartado — fica disponível para reprocessamento manual.</li>
+                </ul>
+              </section>
+            </div>
+            <div>
+              <div class="refs-title">Referências e materiais</div>
+              <div class="refs">
+                <article class="ref">
+                  <div class="thumb docs">Event Sourcing<div class="sub">Martin Fowler</div></div>
+                  <div class="ref-body">
+                    <strong>Event Sourcing — Martin Fowler</strong>
+                    <p>O artigo original que define o conceito. Curto, claro e com exemplos. Leia antes de qualquer livro sobre o assunto.</p>
+                    <a href="https://martinfowler.com/eaaDev/EventSourcing.html" target="_blank" rel="noopener">Abrir referência</a>
+                  </div>
+                </article>
+                <article class="ref">
+                  <div class="thumb docs">Outbox Pattern<div class="sub">microservices.io</div></div>
+                  <div class="ref-body">
+                    <strong>Transactional Outbox</strong>
+                    <p>Explica com diagrama como salvar evento e dado na mesma transação e só publicar depois, evitando perda de evento.</p>
+                    <a href="https://microservices.io/patterns/data/transactional-outbox.html" target="_blank" rel="noopener">Abrir referência</a>
+                  </div>
+                </article>
+                <article class="ref">
+                  <div class="thumb docs">Idempotent Consumer<div class="sub">microservices.io</div></div>
+                  <div class="ref-body">
+                    <strong>Idempotent Consumer</strong>
+                    <p>Como garantir que reprocessar um evento não duplica efeitos. Fundamental para o módulo Contábil do Jade-stock.</p>
+                    <a href="https://microservices.io/patterns/communication-style/idempotent-consumer.html" target="_blank" rel="noopener">Abrir referência</a>
+                  </div>
+                </article>
+                <article class="ref">
+                  <div class="thumb video">Vídeos PT-BR<div class="sub">Event-driven</div></div>
+                  <div class="ref-body">
+                    <strong>Arquitetura orientada a eventos em PT-BR</strong>
+                    <p>Conteúdo em português sobre eventos, mensageria e padrões de resiliência.</p>
+                    <a href="https://www.youtube.com/results?search_query=arquitetura+orientada+eventos+outbox+portugues" target="_blank" rel="noopener">Buscar no YouTube PT-BR</a>
+                  </div>
+                </article>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <!-- ETAPA D -->
+        <details class="module">
+          <summary>
+            <div class="module-num num-dados">D</div>
+            <div class="module-summary-text">
+              <h3>Estatística aplicada — ARIMA e SARIMA</h3>
+              <span class="meta">Base obrigatória antes de rede neural: previsão explicável e benchmark honesto</span>
+            </div>
+            <span class="module-tag tag-dados">Dados / IA</span>
+            <svg class="module-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </summary>
+          <div class="module-body">
+            <div class="callout-30">
+              <div class="label">🧠 Por que isso importa para o Jade-stock</div>
+              <p>Antes de implementar qualquer modelo de IA para prever demanda de estoque, você precisa de um baseline honesto. O ARIMA é esse baseline: simples, explicável, auditável. Se o modelo neural não vencer o ARIMA com margem consistente, não vai para produção. Você precisa entender ARIMA para saber quando a IA está realmente ajudando — ou só adicionando complexidade.</p>
+            </div>
+            <div class="split">
+              <section class="box">
+                <h4>O que dominar</h4>
+                <ul>
+                  <li>Tendência (trend): série que sobe ou desce ao longo do tempo.</li>
+                  <li>Sazonalidade (seasonality): padrão que se repete em ciclos (semanal, mensal, anual).</li>
+                  <li>Ruído (noise): variação aleatória que não tem padrão — e que modelos simples não conseguem prever.</li>
+                  <li>Stationarity: série "estável" que ARIMA exige. Como testar (Teste ADF) e como transformar (diferenciação).</li>
+                  <li>ACF e PACF: gráficos que revelam os parâmetros p, d, q do ARIMA. Leia os gráficos antes de ajustar na força bruta.</li>
+                  <li>Métricas de avaliação: MAE (erro médio), RMSE (penaliza erros grandes), MAPE (erro percentual), WAPE (ponderado por volume).</li>
+                  <li>SARIMA: ARIMA com componente sazonal. Quando usar em vez do ARIMA simples.</li>
+                </ul>
+              </section>
+              <section class="box">
+                <h4>Aplicação no Jade-stock</h4>
+                <ul>
+                  <li>Baseline por SKU/endereço/período: o modelo mais simples possível para comparação futura.</li>
+                  <li>Comparar baseline ingênuo (média dos últimos 4 períodos) vs ARIMA — e documentar o ganho.</li>
+                  <li>Publicar <strong>recomendação</strong>, nunca execução automática: a IA sugere, o operador decide.</li>
+                  <li>Versionar método e janela de treino: <code>model_version</code>, <code>train_start</code>, <code>train_end</code> em todo output.</li>
+                </ul>
+              </section>
+            </div>
+            <div class="alert warn">
+              <span class="alert-icon">⚠️</span>
+              <span>ARIMA assume que a série é <em>estacionária</em>. Se o estoque de um SKU está crescendo todo mês (tendência), você precisa diferenciar a série antes de rodar o modelo. Ignorar isso gera previsões completamente erradas.</span>
+            </div>
+            <div>
+              <div class="refs-title">Referências e materiais</div>
+              <div class="refs">
+                <article class="ref">
+                  <div class="thumb data">FPP3<div class="sub">Forecasting: Principles and Practice</div></div>
+                  <div class="ref-body">
+                    <strong>Forecasting: Principles and Practice (Hyndman)</strong>
+                    <p>O melhor livro de forecasting disponível gratuitamente online. Claro, prático e com código R/Python. Leia os capítulos 2, 3 e 9 primeiro.</p>
+                    <a href="https://otexts.com/fpp3/" target="_blank" rel="noopener">Abrir livro gratuito</a>
+                  </div>
+                </article>
+                <article class="ref">
+                  <div class="thumb data">statsmodels<div class="sub">ARIMA em Python</div></div>
+                  <div class="ref-body">
+                    <strong>ARIMA — statsmodels (Python)</strong>
+                    <p>Documentação da implementação ARIMA em Python. Mostra parâmetros, como ajustar e como interpretar o summary do modelo.</p>
+                    <a href="https://www.statsmodels.org/stable/generated/statsmodels.tsa.arima.model.ARIMA.html" target="_blank" rel="noopener">Abrir referência</a>
+                  </div>
+                </article>
+                <article class="ref">
+                  <div class="thumb data">StatsForecast<div class="sub">AutoARIMA — Nixtla</div></div>
+                  <div class="ref-body">
+                    <strong>Nixtla StatsForecast</strong>
+                    <p>Biblioteca Python que ajusta ARIMA automaticamente por SKU em escala. Útil quando você tem centenas de itens para prever.</p>
+                    <a href="https://nixtlaverse.nixtla.io/statsforecast/" target="_blank" rel="noopener">Abrir referência</a>
+                  </div>
+                </article>
+                <article class="ref">
+                  <div class="thumb video">Vídeos PT-BR<div class="sub">Séries temporais</div></div>
+                  <div class="ref-body">
+                    <strong>ARIMA e séries temporais em português</strong>
+                    <p>Aulas em português cobrindo stationarity, ACF/PACF, ARIMA e SARIMA com exemplos práticos.</p>
+                    <a href="https://www.youtube.com/results?search_query=arima+sarima+series+temporais+portugues+pratico" target="_blank" rel="noopener">Buscar no YouTube PT-BR</a>
+                  </div>
+                </article>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <!-- ETAPA E -->
+        <details class="module">
+          <summary>
+            <div class="module-num num-dados">E</div>
+            <div class="module-summary-text">
+              <h3>Redes neurais para forecast — sem hype</h3>
+              <span class="meta">Modelo neural só entra quando superar o baseline com estabilidade comprovada</span>
+            </div>
+            <span class="module-tag tag-dados">Dados / IA</span>
+            <svg class="module-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </summary>
+          <div class="module-body">
+            <div class="callout-30">
+              <div class="label">🧠 Por que isso importa para o Jade-stock</div>
+              <p>Redes neurais para séries temporais não funcionam como imagens ou texto. Elas precisam de conceitos específicos: janela temporal (lookback), horizonte de previsão, features exógenas. Sem entender esses conceitos, você não vai saber se o modelo está aprendendo o padrão real ou memorizando os dados de treino. E não vai saber quando ele começou a errar — o que em estoque significa reposição errada, falta de produto ou excesso de capital parado.</p>
+            </div>
+            <div class="split">
+              <section class="box">
+                <h4>O que dominar</h4>
+                <ul>
+                  <li><strong>Janela temporal (lookback window):</strong> quantos períodos passados o modelo vê para fazer cada previsão. Ex.: usar os últimos 12 meses para prever o próximo mês.</li>
+                  <li><strong>Horizonte de previsão:</strong> quantos períodos à frente o modelo prevê. Previsão de 1 semana vs 3 meses — modelos diferentes, precisões diferentes.</li>
+                  <li><strong>Features exógenas:</strong> variáveis externas que influenciam a demanda — feriados, datas comemorativas, campanhas, clima. O modelo aprende com elas, não ignora.</li>
+                  <li><strong>N-BEATS, N-HiTS, TFT:</strong> arquiteturas modernas para séries temporais. Entenda o que cada uma faz bem antes de escolher.</li>
+                  <li><strong>Overfitting:</strong> modelo que decora o treino mas erra no mundo real. Como detectar com set de validação e teste separados.</li>
+                  <li><strong>Drift:</strong> quando o padrão do mundo muda e o modelo fica desatualizado. Como monitorar e recalibrar.</li>
+                  <li><strong>Previsão probabilística:</strong> em vez de um número único, o modelo retorna um intervalo de confiança. Útil para definir estoque de segurança.</li>
+                </ul>
+              </section>
+              <section class="box">
+                <h4>Aplicação no Jade-stock</h4>
+                <ul>
+                  <li>Comparação objetiva: neural vs ARIMA vs baseline ingênuo, documentada com métricas iguais.</li>
+                  <li>Registro de <code>model_version</code>, <code>lookback_window</code>, <code>forecast_horizon</code> e métricas em todo output.</li>
+                  <li>Fallback automático: se o modelo neural parar de funcionar, o ARIMA assume sem intervenção manual.</li>
+                  <li>Features exógenas do Jade-stock: feriados nacionais, datas de inventário, promoções cadastradas.</li>
+                  <li>Nenhum modelo escreve diretamente no saldo — apenas emite recomendação para aprovação humana.</li>
+                </ul>
+              </section>
+            </div>
+            <div class="alert warn">
+              <span class="alert-icon">⚠️</span>
+              <span>A janela temporal e o horizonte de previsão são as decisões mais importantes do modelo — e costumam ser as menos discutidas. Uma janela muito curta e o modelo não aprende padrões sazonais. Um horizonte muito longo e a precisão cai drasticamente. Defina ambos com base no ciclo real de reposição do negócio.</span>
+            </div>
+            <div>
+              <div class="refs-title">Referências e materiais</div>
+              <div class="refs">
+                <article class="ref">
+                  <div class="thumb data">NeuralForecast<div class="sub">Nixtla — N-BEATS, TFT</div></div>
+                  <div class="ref-body">
+                    <strong>NeuralForecast (Nixtla)</strong>
+                    <p>Biblioteca Python com N-BEATS, N-HiTS, TFT e outros modelos neurais para séries temporais. Boa documentação com exemplos.</p>
+                    <a href="https://nixtlaverse.nixtla.io/neuralforecast/" target="_blank" rel="noopener">Abrir referência</a>
+                  </div>
+                </article>
+                <article class="ref">
+                  <div class="thumb data">PyTorch Forecasting<div class="sub">TFT e modelos avançados</div></div>
+                  <div class="ref-body">
+                    <strong>PyTorch Forecasting</strong>
+                    <p>Implementação do Temporal Fusion Transformer (TFT) com suporte a features exógenas e previsão probabilística.</p>
+                    <a href="https://pytorch-forecasting.readthedocs.io/" target="_blank" rel="noopener">Abrir referência</a>
+                  </div>
+                </article>
+                <article class="ref">
+                  <div class="thumb data">GluonTS<div class="sub">Previsão probabilística</div></div>
+                  <div class="ref-body">
+                    <strong>GluonTS (AWS)</strong>
+                    <p>Ecossistema de séries temporais com suporte nativo a previsão probabilística — retorna intervalos de confiança, não só um número.</p>
+                    <a href="https://ts.gluon.ai/stable/" target="_blank" rel="noopener">Abrir referência</a>
+                  </div>
+                </article>
+                <article class="ref">
+                  <div class="thumb video">Vídeos PT-BR<div class="sub">Deep learning para séries</div></div>
+                  <div class="ref-body">
+                    <strong>Redes neurais para séries temporais em PT-BR</strong>
+                    <p>Aulas em português sobre LSTM, TFT, N-BEATS e forecasting com deep learning.</p>
+                    <a href="https://www.youtube.com/results?search_query=redes+neurais+series+temporais+lstm+forecast+portugues" target="_blank" rel="noopener">Buscar no YouTube PT-BR</a>
+                  </div>
+                </article>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <!-- ETAPA F -->
+        <details class="module">
+          <summary>
+            <div class="module-num num-dados">F</div>
+            <div class="module-summary-text">
+              <h3>MLOps e governança de modelos</h3>
+              <span class="meta">Rastreabilidade de experimento, produção e rollback sem improviso</span>
+            </div>
+            <span class="module-tag tag-dados">Dados / IA</span>
+            <svg class="module-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </summary>
+          <div class="module-body">
+            <div class="callout-30">
+              <div class="label">🧠 Por que isso importa para o Jade-stock</div>
+              <p>Sem MLOps, você não sabe qual versão do modelo está em produção, com quais dados foi treinado, nem por que a precisão caiu na semana passada. MLOps é o Git para modelos: rastreia tudo, permite reverter, e define critérios claros de quando um modelo pode ir para produção — e quando deve ser removido.</p>
+            </div>
+            <div class="split">
+              <section class="box">
+                <h4>O que dominar</h4>
+                <ul>
+                  <li>Tracking de experimento: registrar cada treino com parâmetros, métricas e artefatos.</li>
+                  <li>Versionamento de modelo e dataset: saber exatamente com quais dados cada versão foi treinada.</li>
+                  <li>Critério de promoção: o que precisa ser verdade para um modelo ir de "experimento" para "produção".</li>
+                  <li>Rollback: como voltar para a versão anterior quando o modelo atual começa a errar mais.</li>
+                  <li>Auditoria do output: todo resultado da IA registrado com <code>correlation_id</code>, <code>model_version</code> e timestamp.</li>
+                </ul>
+              </section>
+              <section class="box">
+                <h4>Aplicação no Jade-stock</h4>
+                <ul>
+                  <li>Saída da IA sempre com metadados: <code>model_version</code>, <code>train_end</code>, <code>mae</code>, <code>correlation_id</code>.</li>
+                  <li>Checklist de promoção: novo modelo só vai para produção se bater o anterior nas últimas 4 semanas de dados reais.</li>
+                  <li>Fallback automático: se erro do modelo aumenta acima do threshold, o sistema reverte para a versão anterior.</li>
+                  <li>Registro de recomendações no schema <code>ia</code> — separado dos dados de estoque, nunca misturado.</li>
+                </ul>
+              </section>
+            </div>
+            <div>
+              <div class="refs-title">Referências e materiais</div>
+              <div class="refs">
+                <article class="ref">
+                  <div class="thumb docs">MLflow<div class="sub">Tracking de experimentos</div></div>
+                  <div class="ref-body">
+                    <strong>MLflow Tracking</strong>
+                    <p>Ferramenta open-source para rastrear experimentos de ML: parâmetros, métricas, artefatos e modelos. Integra com Python sem esforço.</p>
+                    <a href="https://www.mlflow.org/docs/latest/ml/tracking" target="_blank" rel="noopener">Abrir referência</a>
+                  </div>
+                </article>
+                <article class="ref">
+                  <div class="thumb docs">DVC<div class="sub">Versionamento de dados</div></div>
+                  <div class="ref-body">
+                    <strong>DVC — Data Version Control</strong>
+                    <p>Git para datasets e modelos. Rastreia qual versão do dado gerou qual versão do modelo — essencial para auditoria.</p>
+                    <a href="https://dvc.org/doc/user-guide/what-is-dvc" target="_blank" rel="noopener">Abrir referência</a>
+                  </div>
+                </article>
+                <article class="ref">
+                  <div class="thumb video">Vídeos PT-BR<div class="sub">MLOps na prática</div></div>
+                  <div class="ref-body">
+                    <strong>MLOps em português</strong>
+                    <p>Trilha em português cobrindo deploy de modelos, monitoramento e versionamento com MLflow e DVC.</p>
+                    <a href="https://www.youtube.com/results?search_query=mlops+portugues+mlflow+deploy+modelos" target="_blank" rel="noopener">Buscar no YouTube PT-BR</a>
+                  </div>
+                </article>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <!-- ETAPA G — CONTÁBIL (sub-módulos) -->
+        <details class="module">
+          <summary>
+            <div class="module-num num-fin">G</div>
+            <div class="module-summary-text">
+              <h3>Contábil orientado a eventos</h3>
+              <span class="meta">6 sub-módulos progressivos — partidas dobradas até fechamento e reconciliação</span>
+            </div>
+            <span class="module-tag tag-fin">Financeiro</span>
+            <svg class="module-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </summary>
+          <div class="module-body">
+            <div class="callout-30">
+              <div class="label">🧠 Por que isso importa para o Jade-stock</div>
+              <p>O módulo Contábil transforma eventos de estoque em lançamentos financeiros auditáveis. Sem entender contabilidade, você não sabe se o código está fazendo a coisa certa — e um erro silencioso num lançamento contábil pode comprometer o balanço do cliente. Cada sub-módulo abaixo tem um escopo específico e uma entrega concreta. Faça um de cada vez.</p>
+            </div>
+            <div class="alert info">
+              <span class="alert-icon">📌</span>
+              <span>Estes 6 sub-módulos devem ser estudados <strong>em ordem</strong>. Cada um depende do anterior. Não pule para DRE sem entender partidas dobradas.</span>
+            </div>
+            <div class="sub-modules">
+
+              <details class="sub-module">
+                <summary>
+                  <div class="sub-num">1</div>
+                  <div class="sub-module-text">
+                    <strong>Partidas dobradas e plano de contas</strong>
+                    <span class="sub-meta">Entrega: matriz de mapeamento evento_wms → lançamento contábil</span>
+                  </div>
+                  <svg class="module-chevron" style="width:18px;height:18px;color:var(--ink-3);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </summary>
+                <div class="sub-module-body">
+                  <div class="callout-30">
+                    <div class="label">Conceito em 30 segundos</div>
+                    <p>Todo lançamento contábil tem dois lados: <strong>débito</strong> e <strong>crédito</strong>, sempre em valor igual. Isso se chama "partidas dobradas". Ex.: quando o WMS registra uma entrada de mercadoria, o contábil debita Estoque (ativo sobe) e credita Contas a Pagar (passivo sobe). O plano de contas é a lista organizada de todas as contas que o negócio usa.</p>
+                  </div>
+                  <div class="split">
+                    <section class="box">
+                      <h4>O que dominar</h4>
+                      <ul>
+                        <li>Débito vs crédito: o que cada um faz em contas de ativo, passivo, receita e despesa.</li>
+                        <li>Natureza das contas: ativo aumenta com débito, passivo aumenta com crédito.</li>
+                        <li>Plano de contas: grupos (ativo circulante, passivo, receita operacional, custo) e subcontas.</li>
+                        <li>Lançamento manual: como registrar entrada de mercadoria, venda, devolução e avaria.</li>
+                      </ul>
+                    </section>
+                    <section class="box">
+                      <h4>Entrega concreta</h4>
+                      <ul>
+                        <li>Tabela de mapeamento: <code>evento_wms → débito → crédito → histórico</code> para cada tipo de evento do WMS.</li>
+                        <li>Ex.: <code>recebimento_conferido → D: Estoque / C: Fornecedores → "Entrada NF #X"</code>.</li>
+                        <li>Plano de contas mínimo do Jade-stock com os grupos relevantes para WMS.</li>
+                      </ul>
+                    </section>
+                  </div>
+                  <div class="refs-title">Materiais</div>
+                  <div class="refs">
+                    <article class="ref">
+                      <div class="thumb fin">Partidas Dobradas<div class="sub">Fundamento</div></div>
+                      <div class="ref-body">
+                        <strong>Introdução à Contabilidade — Khan Academy</strong>
+                        <p>Série de vídeos curtos e claros que explicam débito, crédito e partidas dobradas do zero. Melhor ponto de partida.</p>
+                        <a href="https://pt.khanacademy.org/economics-finance-domain/core-finance/accounting-and-financial-stateme" target="_blank" rel="noopener">Abrir Khan Academy PT-BR</a>
+                      </div>
+                    </article>
+                    <article class="ref">
+                      <div class="thumb video">Vídeos PT-BR<div class="sub">Partidas dobradas</div></div>
+                      <div class="ref-body">
+                        <strong>Partidas dobradas explicadas em português</strong>
+                        <p>Aulas em português sobre débito, crédito, plano de contas e lançamentos contábeis.</p>
+                        <a href="https://www.youtube.com/results?search_query=partidas+dobradas+contabilidade+explicado+portugues" target="_blank" rel="noopener">Buscar no YouTube PT-BR</a>
+                      </div>
+                    </article>
+                  </div>
+                </div>
+              </details>
+
+              <details class="sub-module">
+                <summary>
+                  <div class="sub-num">2</div>
+                  <div class="sub-module-text">
+                    <strong>Demonstrações financeiras — DRE, BP, DFC e DMPL</strong>
+                    <span class="sub-meta">Entrega: estrutura dos reports financeiros automáticos do Jade-stock</span>
+                  </div>
+                  <svg class="module-chevron" style="width:18px;height:18px;color:var(--ink-3);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </summary>
+                <div class="sub-module-body">
+                  <div class="callout-30">
+                    <div class="label">Conceito em 30 segundos</div>
+                    <p>A DRE (Demonstração do Resultado) mostra se o negócio lucrou ou não em um período. O BP (Balanço Patrimonial) mostra o que o negócio tem (ativos) e o que deve (passivos) em uma data. A DFC (Demonstração do Fluxo de Caixa) mostra quanto dinheiro entrou e saiu — diferente do lucro, que inclui coisas que ainda não foram pagas. O Jade-stock pode gerar todas essas automaticamente a partir dos eventos.</p>
+                  </div>
+                  <div class="split">
+                    <section class="box">
+                      <h4>O que dominar</h4>
+                      <ul>
+                        <li>DRE: Receita → CMV → Lucro Bruto → Despesas Operacionais → EBITDA → Resultado Líquido.</li>
+                        <li>BP: Ativo Circulante (estoque, caixa, clientes) vs Ativo Permanente vs Passivo vs Patrimônio Líquido.</li>
+                        <li>DFC: método indireto (ajustes sobre lucro) vs direto (entradas e saídas de caixa).</li>
+                        <li>Diferença entre regime de competência (DRE) e regime de caixa (DFC).</li>
+                      </ul>
+                    </section>
+                    <section class="box">
+                      <h4>Entrega concreta</h4>
+                      <ul>
+                        <li>Estrutura de query SQL que gera DRE por período a partir dos lançamentos da <code>event_store</code>.</li>
+                        <li>Mapeamento de contas do Jade-stock para as linhas da DRE (Receita de Vendas, CMV, etc.).</li>
+                        <li>Esboço do BP mínimo gerado a partir do saldo das contas contábeis.</li>
+                      </ul>
+                    </section>
+                  </div>
+                  <div class="refs-title">Materiais</div>
+                  <div class="refs">
+                    <article class="ref">
+                      <div class="thumb fin">IAS 1<div class="sub">IFRS — Financial Statements</div></div>
+                      <div class="ref-body">
+                        <strong>IAS 1 — Apresentação das Demonstrações</strong>
+                        <p>Norma internacional que define estrutura mínima do BP e DRE. Use como referência de estrutura, não como leitura primária.</p>
+                        <a href="https://www.ifrs.org/issued-standards/list-of-standards/ias-1-presentation-of-financial-statements/" target="_blank" rel="noopener">Abrir referência</a>
+                      </div>
+                    </article>
+                    <article class="ref">
+                      <div class="thumb fin">IAS 7<div class="sub">Fluxo de Caixa</div></div>
+                      <div class="ref-body">
+                        <strong>IAS 7 — Statement of Cash Flows</strong>
+                        <p>Norma para DFC. Entenda a diferença entre método direto e indireto antes de implementar o relatório.</p>
+                        <a href="https://www.ifrs.org/issued-standards/list-of-standards/ias-7-statement-of-cash-flows/" target="_blank" rel="noopener">Abrir referência</a>
+                      </div>
+                    </article>
+                    <article class="ref">
+                      <div class="thumb video">Vídeos PT-BR<div class="sub">DRE, BP e DFC</div></div>
+                      <div class="ref-body">
+                        <strong>Demonstrações financeiras em português</strong>
+                        <p>Aulas em português de DRE, Balanço Patrimonial e Fluxo de Caixa com exemplos práticos.</p>
+                        <a href="https://www.youtube.com/results?search_query=dre+balanco+patrimonial+dfc+contabilidade+portugues+pratico" target="_blank" rel="noopener">Buscar no YouTube PT-BR</a>
+                      </div>
+                    </article>
+                  </div>
+                </div>
+              </details>
+
+              <details class="sub-module">
+                <summary>
+                  <div class="sub-num">3</div>
+                  <div class="sub-module-text">
+                    <strong>Auditoria contábil e controles internos</strong>
+                    <span class="sub-meta">Entrega: checklist de conformidade e trilha de auditoria ponta a ponta</span>
+                  </div>
+                  <svg class="module-chevron" style="width:18px;height:18px;color:var(--ink-3);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </summary>
+                <div class="sub-module-body">
+                  <div class="callout-30">
+                    <div class="label">Conceito em 30 segundos</div>
+                    <p>Auditoria contábil é o processo de verificar se os lançamentos são verdadeiros e corretos. Controles internos são as regras e processos que previnem erros antes que aconteçam. No Jade-stock, o <code>correlation_id</code> em cada evento é um controle interno: permite rastrear qualquer lançamento até a operação de estoque que o gerou.</p>
+                  </div>
+                  <div class="split">
+                    <section class="box">
+                      <h4>O que dominar</h4>
+                      <ul>
+                        <li>Evidência de auditoria: o que precisa ser registrado para provar que um lançamento é correto.</li>
+                        <li>Segregação de funções: quem registra não deve aprovar — como aplicar no Jade-stock.</li>
+                        <li>Trilha de auditoria (audit trail): log imutável de quem fez o quê, quando e por quê.</li>
+                        <li>Reconciliação: comparar saldo do sistema com saldo físico — e documentar divergências.</li>
+                      </ul>
+                    </section>
+                    <section class="box">
+                      <h4>Entrega concreta</h4>
+                      <ul>
+                        <li>Trilha de auditoria: todo lançamento contábil rastreável até o <code>event_id</code> do WMS via <code>correlation_id</code>.</li>
+                        <li>Checklist de conformidade mínima: o que precisa estar correto antes de fechar o mês.</li>
+                        <li>Relatório de divergência: lançamentos sem evento de origem identificado.</li>
+                      </ul>
+                    </section>
+                  </div>
+                  <div class="refs-title">Materiais</div>
+                  <div class="refs">
+                    <article class="ref">
+                      <div class="thumb fin">CFC<div class="sub">Normas brasileiras</div></div>
+                      <div class="ref-body">
+                        <strong>CFC — Normas Brasileiras de Contabilidade</strong>
+                        <p>Normas do Conselho Federal de Contabilidade para aderência ao contexto brasileiro. Use como referência, não como leitura integral.</p>
+                        <a href="https://portalrestore.cfc.org.br/tecnica/normas-brasileiras-de-contabilidade/normas-completas/" target="_blank" rel="noopener">Abrir referência</a>
+                      </div>
+                    </article>
+                    <article class="ref">
+                      <div class="thumb video">Vídeos PT-BR<div class="sub">Auditoria contábil</div></div>
+                      <div class="ref-body">
+                        <strong>Auditoria e controles internos em português</strong>
+                        <p>Fundamentos de auditoria contábil, evidências e controles internos explicados em português.</p>
+                        <a href="https://www.youtube.com/results?search_query=auditoria+contabil+controles+internos+portugues" target="_blank" rel="noopener">Buscar no YouTube PT-BR</a>
+                      </div>
+                    </article>
+                  </div>
+                </div>
+              </details>
+
+              <details class="sub-module">
+                <summary>
+                  <div class="sub-num">4</div>
+                  <div class="sub-module-text">
+                    <strong>Contabilidade de custos e controladoria</strong>
+                    <span class="sub-meta">Entrega: visão gerencial de margem por SKU e categoria</span>
+                  </div>
+                  <svg class="module-chevron" style="width:18px;height:18px;color:var(--ink-3);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </summary>
+                <div class="sub-module-body">
+                  <div class="callout-30">
+                    <div class="label">Conceito em 30 segundos</div>
+                    <p>Custo de um produto não é só o preço de compra — inclui frete, seguro, armazenagem, perdas e embalagem. A contabilidade de custos calcula o custo real de cada item. A controladoria usa esses dados para tomar decisões: qual SKU dá mais margem? Qual categoria está pesando no resultado? O Jade-stock tem os dados de estoque — com custos calculados, ele pode responder essas perguntas automaticamente.</p>
+                  </div>
+                  <div class="split">
+                    <section class="box">
+                      <h4>O que dominar</h4>
+                      <ul>
+                        <li>CMV (Custo das Mercadorias Vendidas): como calcular com PEPS, UEPS e custo médio ponderado.</li>
+                        <li>Margem bruta e margem de contribuição: diferença e quando usar cada uma.</li>
+                        <li>Custo ABC: classificar produtos por rentabilidade (curva ABC de margem, não de giro).</li>
+                        <li>Orçamento vs realizado: comparar o planejado com o que realmente aconteceu.</li>
+                      </ul>
+                    </section>
+                    <section class="box">
+                      <h4>Entrega concreta</h4>
+                      <ul>
+                        <li>Cálculo de custo médio ponderado por SKU a partir das movimentações de entrada do WMS.</li>
+                        <li>Dashboard de margem bruta por categoria: Receita - CMV por grupo de produtos.</li>
+                        <li>Alerta automático quando a margem de um SKU cai abaixo do threshold configurado.</li>
+                      </ul>
+                    </section>
+                  </div>
+                  <div class="refs-title">Materiais</div>
+                  <div class="refs">
+                    <article class="ref">
+                      <div class="thumb fin">IAS 2<div class="sub">Inventories — IFRS</div></div>
+                      <div class="ref-body">
+                        <strong>IAS 2 — Inventories</strong>
+                        <p>Norma internacional para valoração de estoque. Define como calcular CMV e o que pode entrar no custo do produto.</p>
+                        <a href="https://www.ifrs.org/issued-standards/list-of-standards/ias-2-inventories/" target="_blank" rel="noopener">Abrir referência</a>
+                      </div>
+                    </article>
+                    <article class="ref">
+                      <div class="thumb video">Vídeos PT-BR<div class="sub">Custos e margem</div></div>
+                      <div class="ref-body">
+                        <strong>Contabilidade de custos em português</strong>
+                        <p>Aulas sobre CMV, custo médio, margem bruta e controladoria gerencial em português.</p>
+                        <a href="https://www.youtube.com/results?search_query=contabilidade+custos+cmv+margem+bruta+portugues" target="_blank" rel="noopener">Buscar no YouTube PT-BR</a>
+                      </div>
+                    </article>
+                  </div>
+                </div>
+              </details>
+
+              <details class="sub-module">
+                <summary>
+                  <div class="sub-num">5</div>
+                  <div class="sub-module-text">
+                    <strong>Tributário aplicado por operação</strong>
+                    <span class="sub-meta">Entrega: mapa de impacto tributário por tipo de evento do WMS</span>
+                  </div>
+                  <svg class="module-chevron" style="width:18px;height:18px;color:var(--ink-3);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </summary>
+                <div class="sub-module-body">
+                  <div class="callout-30">
+                    <div class="label">Conceito em 30 segundos</div>
+                    <p>Cada operação de estoque pode gerar obrigações tributárias diferentes: uma entrada de mercadoria gera crédito de ICMS; uma venda gera débito de ICMS, PIS e COFINS; uma devolução cancela parte do que foi gerado. O Jade-stock precisa saber quais eventos disparam qual tratamento tributário — mesmo que o cálculo final fique com o contador.</p>
+                  </div>
+                  <div class="split">
+                    <section class="box">
+                      <h4>O que dominar</h4>
+                      <ul>
+                        <li>ICMS: imposto estadual sobre circulação de mercadorias. Crédito na entrada, débito na saída.</li>
+                        <li>PIS e COFINS: contribuições federais sobre receita. Regime cumulativo vs não-cumulativo.</li>
+                        <li>Nota fiscal: como o evento de recebimento se conecta à NF-e e ao SPED.</li>
+                        <li>Simples Nacional vs Lucro Presumido vs Lucro Real: impacto no tratamento contábil.</li>
+                      </ul>
+                    </section>
+                    <section class="box">
+                      <h4>Entrega concreta</h4>
+                      <ul>
+                        <li>Mapa: tipo de evento WMS → impacto tributário → campo da NF-e relacionado.</li>
+                        <li>Flag por operação: <code>gera_credito_icms</code>, <code>gera_debito_pis_cofins</code> na tabela de eventos.</li>
+                        <li>Documentação de quais campos do Jade-stock alimentarão o SPED Fiscal futuramente.</li>
+                      </ul>
+                    </section>
+                  </div>
+                  <div class="refs-title">Materiais</div>
+                  <div class="refs">
+                    <article class="ref">
+                      <div class="thumb fin">CPC<div class="sub">Pronunciamentos</div></div>
+                      <div class="ref-body">
+                        <strong>CPC — Pronunciamentos Contábeis</strong>
+                        <p>Pronunciamentos do Comitê de Pronunciamentos Contábeis para aderência às normas brasileiras.</p>
+                        <a href="https://www.cpc.org.br/" target="_blank" rel="noopener">Abrir referência</a>
+                      </div>
+                    </article>
+                    <article class="ref">
+                      <div class="thumb video">Vídeos PT-BR<div class="sub">ICMS, PIS, COFINS</div></div>
+                      <div class="ref-body">
+                        <strong>Tributário aplicado em português</strong>
+                        <p>Aulas sobre ICMS, PIS/COFINS, NF-e e regimes tributários no contexto de operações de estoque.</p>
+                        <a href="https://www.youtube.com/results?search_query=icms+pis+cofins+nota+fiscal+contabilidade+portugues" target="_blank" rel="noopener">Buscar no YouTube PT-BR</a>
+                      </div>
+                    </article>
+                  </div>
+                </div>
+              </details>
+
+              <details class="sub-module">
+                <summary>
+                  <div class="sub-num">6</div>
+                  <div class="sub-module-text">
+                    <strong>Fechamento contábil e reconciliação</strong>
+                    <span class="sub-meta">Entrega: rotina mensal automatizada e relatório de divergências</span>
+                  </div>
+                  <svg class="module-chevron" style="width:18px;height:18px;color:var(--ink-3);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </summary>
+                <div class="sub-module-body">
+                  <div class="callout-30">
+                    <div class="label">Conceito em 30 segundos</div>
+                    <p>Fechamento contábil é o processo mensal de "encerrar os livros": verificar que todos os lançamentos estão corretos, gerar as demonstrações do mês e apurar o resultado. Reconciliação é comparar o saldo do sistema com o saldo físico ou bancário e explicar qualquer diferença. No Jade-stock, a reconciliação operacional cruza o saldo do schema WMS com o saldo do schema Contábil — qualquer divergência vira um alerta.</p>
+                  </div>
+                  <div class="split">
+                    <section class="box">
+                      <h4>O que dominar</h4>
+                      <ul>
+                        <li>Encerramento de contas de resultado: zerar receitas e despesas e transferir para o patrimônio líquido.</li>
+                        <li>Apuração de resultado: DRE do período calculada a partir dos lançamentos.</li>
+                        <li>Conciliação bancária: comparar extrato do banco com lançamentos de caixa.</li>
+                        <li>Conciliação operacional: saldo físico de estoque vs saldo contábil — identificar e explicar diferenças.</li>
+                      </ul>
+                    </section>
+                    <section class="box">
+                      <h4>Entrega concreta</h4>
+                      <ul>
+                        <li>Script de fechamento: query que gera o balancete mensal a partir dos lançamentos do schema contabil.</li>
+                        <li>Consumer contábil com retry + DLQ: nenhum evento crítico perdido sem rastreamento.</li>
+                        <li>Relatório de reconciliação: saldo WMS vs saldo Contábil, com divergências explicadas e linkadas ao <code>correlation_id</code>.</li>
+                      </ul>
+                    </section>
+                  </div>
+                  <div class="refs-title">Materiais</div>
+                  <div class="refs">
+                    <article class="ref">
+                      <div class="thumb fin">CVM Dados<div class="sub">DFP/ITR — dados reais</div></div>
+                      <div class="ref-body">
+                        <strong>CVM — Dados Abertos (DFP/ITR)</strong>
+                        <p>Demonstrações financeiras reais de empresas brasileiras para estudo de estrutura contábil real.</p>
+                        <a href="https://dados.cvm.gov.br/" target="_blank" rel="noopener">Abrir referência</a>
+                      </div>
+                    </article>
+                    <article class="ref">
+                      <div class="thumb video">Vídeos PT-BR<div class="sub">Fechamento e reconciliação</div></div>
+                      <div class="ref-body">
+                        <strong>Fechamento contábil em português</strong>
+                        <p>Aulas sobre encerramento de exercício, balancete de verificação e reconciliação em português.</p>
+                        <a href="https://www.youtube.com/results?search_query=fechamento+contabil+reconciliacao+balancete+portugues" target="_blank" rel="noopener">Buscar no YouTube PT-BR</a>
+                      </div>
+                    </article>
+                  </div>
+                </div>
+              </details>
+
+            </div><!-- /sub-modules -->
+          </div>
+        </details>
+
+        <!-- ETAPA H — IAM -->
+        <details class="module">
+          <summary>
+            <div class="module-num num-prod">H</div>
+            <div class="module-summary-text">
+              <h3>IAM — OAuth2, OIDC e licença por tenant</h3>
+              <span class="meta">Segurança de acesso e modelo comercial sem acoplar lógica no cliente</span>
+            </div>
+            <span class="module-tag tag-prod">Produção</span>
+            <svg class="module-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </summary>
+          <div class="module-body">
+            <div class="callout-30">
+              <div class="label">🧠 Por que isso importa para o Jade-stock</div>
+              <p>O Jade-stock já tem OAuth2 planejado via Google. O que você precisa entender é o que acontece depois do login: como o token do Google vira um token do Jade-stock, o que é um <em>scope</em> (permissão específica), como cada tenant (cliente) fica isolado dos outros, e como a licença é validada via orquestrador sem intervenção manual. Sem isso, você não consegue explicar para um cliente por que o operador X não pode ver os dados do operador Y.</p>
+            </div>
+            <div class="split">
+              <section class="box">
+                <h4>O que dominar</h4>
+                <ul>
+                  <li>AuthN vs AuthZ: autenticação (quem é você?) vs autorização (o que você pode fazer?).</li>
+                  <li>OAuth2 e OIDC: o fluxo completo de "Entrar com Google" até o token interno do Jade-stock.</li>
+                  <li>PKCE: proteção obrigatória para apps clientes (Flutter/Flet). Por que usar e como funciona.</li>
+                  <li>Scopes: permissões granulares. Ex.: <code>wms:read</code>, <code>wms:write</code>, <code>contabil:read</code>.</li>
+                  <li>Tenant isolation: como garantir que os dados de um cliente nunca vazam para outro.</li>
+                  <li>Feature flags por plano: habilitar ou desabilitar módulos (IA, Contábil) por licença ativa.</li>
+                </ul>
+              </section>
+              <section class="box">
+                <h4>Aplicação no Jade-stock</h4>
+                <ul>
+                  <li>API valida token + scope em cada endpoint — sem token, sem acesso.</li>
+                  <li>Matriz de acesso: operador de estoque vs gerente vs contador — permissões diferentes por perfil.</li>
+                  <li>Controle de módulo por licença: se o cliente não pagou pelo módulo de IA, o endpoint retorna 403.</li>
+                  <li>Auditoria de acesso: quem acessou o quê, quando e de qual IP — para ações sensíveis como ajustes de estoque.</li>
+                </ul>
+              </section>
+            </div>
+            <div>
+              <div class="refs-title">Referências e materiais</div>
+              <div class="refs">
+                <article class="ref">
+                  <div class="thumb api">RFC 6749<div class="sub">OAuth2 — especificação</div></div>
+                  <div class="ref-body">
+                    <strong>OAuth 2.0 (RFC 6749)</strong>
+                    <p>A especificação oficial do OAuth2. Leia a seção 4.1 (Authorization Code Flow) — é o fluxo que o Jade-stock usa.</p>
+                    <a href="https://datatracker.ietf.org/doc/html/rfc6749#section-4.1" target="_blank" rel="noopener">Abrir referência</a>
+                  </div>
+                </article>
+                <article class="ref">
+                  <div class="thumb api">PKCE RFC 7636<div class="sub">Segurança para apps</div></div>
+                  <div class="ref-body">
+                    <strong>PKCE (RFC 7636)</strong>
+                    <p>Extensão de segurança obrigatória para apps clientes como Flutter. Evita interceptação do código de autorização.</p>
+                    <a href="https://www.rfc-editor.org/rfc/rfc7636" target="_blank" rel="noopener">Abrir referência</a>
+                  </div>
+                </article>
+                <article class="ref">
+                  <div class="thumb api">OIDC Core<div class="sub">Identidade sobre OAuth2</div></div>
+                  <div class="ref-body">
+                    <strong>OpenID Connect Core</strong>
+                    <p>Padrão que adiciona identidade (quem é o usuário) ao OAuth2 (o que ele pode fazer). É o que o "Entrar com Google" usa.</p>
+                    <a href="https://openid.net/specs/openid-connect-core-1_0.html" target="_blank" rel="noopener">Abrir referência</a>
+                  </div>
+                </article>
+                <article class="ref">
+                  <div class="thumb video">Vídeos PT-BR<div class="sub">OAuth2 e OIDC</div></div>
+                  <div class="ref-body">
+                    <strong>OAuth2 e OpenID Connect em português</strong>
+                    <p>Explicação completa do fluxo OAuth2/OIDC com exemplos práticos em português.</p>
+                    <a href="https://www.youtube.com/results?search_query=oauth2+openid+connect+jwt+portugues+explicado" target="_blank" rel="noopener">Buscar no YouTube PT-BR</a>
+                  </div>
+                </article>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <!-- ETAPA I — OBSERVABILIDADE -->
+        <details class="module">
+          <summary>
+            <div class="module-num num-prod">I</div>
+            <div class="module-summary-text">
+              <h3>Observabilidade e operação contínua</h3>
+              <span class="meta">Saúde do sistema visível em tempo real, com resposta rápida a incidentes</span>
+            </div>
+            <span class="module-tag tag-prod">Produção</span>
+            <svg class="module-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </summary>
+          <div class="module-body">
+            <div class="callout-30">
+              <div class="label">🧠 Por que isso importa para o Jade-stock</div>
+              <p>Quando um cliente ligar dizendo que o sistema está lento ou que um evento sumiu, você precisa conseguir responder em minutos — não em horas de investigação no terminal. Observabilidade é a capacidade de entender o que está acontecendo dentro do sistema apenas olhando para seus outputs: logs, métricas e traces. Sem isso, você está voando no escuro em produção.</p>
+            </div>
+            <div class="split">
+              <section class="box">
+                <h4>O que dominar</h4>
+                <ul>
+                  <li>Logs estruturados: JSON com <code>correlation_id</code>, <code>tenant_id</code>, <code>level</code> e <code>timestamp</code> em todos os logs — não texto livre.</li>
+                  <li>Métricas: latência (p50, p95, p99), taxa de erro e throughput por endpoint.</li>
+                  <li>Tracing distribuído: rastrear uma requisição que passa por WMS → Event Store → Contábil usando o mesmo <code>correlation_id</code>.</li>
+                  <li>SLO (Service Level Objective): meta de disponibilidade. Ex.: 99.5% das requisições em menos de 500ms.</li>
+                  <li>Alerta acionável: alerta que diz o que fazer, não só que algo está errado.</li>
+                  <li>Runbook: documento com o passo a passo de como resolver cada tipo de incidente.</li>
+                </ul>
+              </section>
+              <section class="box">
+                <h4>Aplicação no Jade-stock</h4>
+                <ul>
+                  <li>Dashboard mínimo: latência da API, taxa de erro, eventos pendentes na fila e eventos na DLQ.</li>
+                  <li>Alerta de DLQ não vazia: se há eventos que falharam 5 vezes, o alerta dispara imediatamente.</li>
+                  <li>Trace de operação: dado o <code>correlation_id</code> de um lançamento contábil, encontrar o evento WMS de origem em segundos.</li>
+                  <li>Playbook por módulo: o que fazer quando WMS cai, quando Contábil para de processar, quando modelo de IA começa a errar.</li>
+                </ul>
+              </section>
+            </div>
+            <div>
+              <div class="refs-title">Referências e materiais</div>
+              <div class="refs">
+                <article class="ref">
+                  <div class="thumb docs">OpenTelemetry<div class="sub">Python — padrão de instrumentação</div></div>
+                  <div class="ref-body">
+                    <strong>OpenTelemetry Python</strong>
+                    <p>Padrão aberto para logs, métricas e traces. Uma única instrumentação que funciona com Prometheus, Grafana, Jaeger e outros.</p>
+                    <a href="https://opentelemetry.io/docs/languages/python/" target="_blank" rel="noopener">Abrir referência</a>
+                  </div>
+                </article>
+                <article class="ref">
+                  <div class="thumb docs">Prometheus<div class="sub">Métricas e alertas</div></div>
+                  <div class="ref-body">
+                    <strong>Prometheus</strong>
+                    <p>Sistema de coleta de métricas com suporte a alertas. Integra nativamente com FastAPI e Grafana.</p>
+                    <a href="https://prometheus.io/docs/tutorials/getting_started/" target="_blank" rel="noopener">Abrir referência</a>
+                  </div>
+                </article>
+                <article class="ref">
+                  <div class="thumb docs">Grafana<div class="sub">Dashboard e visualização</div></div>
+                  <div class="ref-body">
+                    <strong>Grafana Dashboards</strong>
+                    <p>Visualização de métricas do Prometheus. Com templates prontos para FastAPI, PostgreSQL e sistemas Python.</p>
+                    <a href="https://grafana.com/docs/grafana/latest/dashboards/" target="_blank" rel="noopener">Abrir referência</a>
+                  </div>
+                </article>
+                <article class="ref">
+                  <div class="thumb video">Vídeos PT-BR<div class="sub">Observabilidade prática</div></div>
+                  <div class="ref-body">
+                    <strong>Observabilidade em português</strong>
+                    <p>Conteúdo em português sobre OpenTelemetry, Prometheus e Grafana com exemplos práticos.</p>
+                    <a href="https://www.youtube.com/results?search_query=observabilidade+opentelemetry+prometheus+grafana+portugues" target="_blank" rel="noopener">Buscar no YouTube PT-BR</a>
+                  </div>
+                </article>
+              </div>
+            </div>
+          </div>
+        </details>
+
+      </div><!-- /modules-list -->
+    </section>
+
+    <!-- PLANO 12 SEMANAS -->
+    <section class="card" id="plano">
+      <div class="section-header">
+        <h2>Plano de 12 semanas</h2>
+        <span class="sub">execução incremental, uma etapa por vez</span>
+      </div>
+      <div class="plano-grid">
+        <article class="plano-card p1">
+          <span class="semanas">Semanas 1 – 3</span>
+          <strong>Base técnica</strong>
+          <p>API madura, PostgreSQL avançado e arquitetura orientada a eventos. A fundação de tudo.</p>
+          <span class="etapas-ref">Etapas A · B · C</span>
+        </article>
+        <article class="plano-card p2">
+          <span class="semanas">Semanas 4 – 7</span>
+          <strong>Dados e IA</strong>
+          <p>ARIMA como baseline, redes neurais com critério e MLOps para governança em produção.</p>
+          <span class="etapas-ref">Etapas D · E · F</span>
+        </article>
+        <article class="plano-card p3">
+          <span class="semanas">Semanas 8 – 10</span>
+          <strong>Financeiro</strong>
+          <p>Contábil por eventos: dos sub-módulos 1 a 6, de partidas dobradas ao fechamento mensal.</p>
+          <span class="etapas-ref">Etapa G (sub-módulos 1–6)</span>
+        </article>
+        <article class="plano-card p4">
+          <span class="semanas">Semanas 11 – 12</span>
+          <strong>Produção</strong>
+          <p>IAM com OAuth2/OIDC, observabilidade com Prometheus/Grafana e hardening de segurança.</p>
+          <span class="etapas-ref">Etapas H · I</span>
+        </article>
+      </div>
+    </section>
+
+    <!-- DICIONÁRIO -->
+    <section class="card" id="dicionario">
+      <div class="section-header">
+        <h2>Dicionário anti-WTF</h2>
+        <span class="sub">termos que aparecem sem explicação no código</span>
+      </div>
+      <div class="dict-grid">
+        <article class="dict-item"><strong>ARIMA/SARIMA</strong><p>Modelos estatísticos para prever séries temporais. SARIMA adiciona componente de sazonalidade.</p></article>
+        <article class="dict-item"><strong>Outbox Pattern</strong><p>Salvar evento no banco na mesma transação que o dado, garantindo que nunca se perca na publicação.</p></article>
+        <article class="dict-item"><strong>Idempotência</strong><p>Processar o mesmo evento duas vezes produz o mesmo resultado que processar uma vez.</p></article>
+        <article class="dict-item"><strong>DLQ (Dead-Letter Queue)</strong><p>Fila de destino para eventos que falharam muitas vezes. Nada é descartado silenciosamente.</p></article>
+        <article class="dict-item"><strong>MLOps</strong><p>Práticas de engenharia para operar modelos de ML com rastreabilidade, versionamento e rollback.</p></article>
+        <article class="dict-item"><strong>Tenant</strong><p>Um cliente/organização com dados completamente isolados dos outros no mesmo sistema.</p></article>
+        <article class="dict-item"><strong>OIDC</strong><p>OpenID Connect: camada de identidade sobre OAuth2. É o que o "Entrar com Google" usa.</p></article>
+        <article class="dict-item"><strong>SLO</strong><p>Service Level Objective: meta técnica de qualidade. Ex.: 99.5% das requisições em menos de 500ms.</p></article>
+        <article class="dict-item"><strong>Stationarity</strong><p>Série temporal sem tendência ou sazonalidade. Exigida pelo ARIMA antes de rodar.</p></article>
+        <article class="dict-item"><strong>ACF / PACF</strong><p>Gráficos de autocorrelação que revelam os parâmetros p e q do ARIMA.</p></article>
+        <article class="dict-item"><strong>Lookback window</strong><p>Quantos períodos passados o modelo neural usa para fazer cada previsão.</p></article>
+        <article class="dict-item"><strong>Feature exógena</strong><p>Variável externa que influencia a série (feriado, clima, promoção) — o modelo aprende com ela.</p></article>
+        <article class="dict-item"><strong>Drift</strong><p>Quando o padrão do mundo muda e o modelo que era bom começa a errar. Exige recalibração.</p></article>
+        <article class="dict-item"><strong>CMV</strong><p>Custo das Mercadorias Vendidas. O custo real do produto: compra + frete + perdas + armazenagem.</p></article>
+        <article class="dict-item"><strong>Partidas dobradas</strong><p>Todo lançamento tem dois lados iguais: débito e crédito. A base de toda contabilidade.</p></article>
+        <article class="dict-item"><strong>PKCE</strong><p>Extensão de segurança para OAuth2 em apps clientes. Evita interceptação do token.</p></article>
+      </div>
+    </section>
+
+    <!-- MÉTODO -->
+    <section class="card" id="metodo">
+      <div class="section-header">
+        <h2>Método de estudo</h2>
+        <span class="sub">feito para funcionar com TDAH</span>
+      </div>
+      <div class="metodo-grid">
+        <div class="metodo-box">
+          <h4>Regra 60 / 30 / 10</h4>
+          <ul>
+            <li><strong>60%</strong> — problema de negócio e decisão: por que isso existe, que problema resolve, o que acontece se ignorar.</li>
+            <li><strong>30%</strong> — padrão de arquitetura: como o conceito se encaixa no Jade-stock.</li>
+            <li><strong>10%</strong> — detalhe de implementação: só depois de entender os dois anteriores.</li>
+          </ul>
+        </div>
+        <div class="metodo-box">
+          <h4>Ciclo por módulo</h4>
+          <ol>
+            <li>Leia o "Conceito em 30 segundos" do módulo.</li>
+            <li>Assista 1–2 vídeos em português antes de ler documentação técnica.</li>
+            <li>Leia a referência principal (não tudo — leia o que resolve o "O que dominar").</li>
+            <li>Escreva com suas palavras o que aprendeu — se não consegue explicar, ainda não aprendeu.</li>
+            <li>Faça 1 experimento mínimo no Jade-stock antes de avançar.</li>
+          </ol>
+        </div>
+      </div>
+      <div class="alert info" style="margin-top:14px;">
+        <span class="alert-icon">🎯</span>
+        <span>Se um módulo parece impossível de entender, comece pelo vídeo PT-BR antes de qualquer documentação técnica. Inglês acadêmico denso bloqueia a compreensão quando o conceito é novo. O vídeo desbloqueia, a documentação aprofunda.</span>
+      </div>
+    </section>
+
+  </div><!-- /layout -->
+</body>
 </html>
