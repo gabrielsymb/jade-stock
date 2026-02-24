@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fluxos Reais | WMS</title>
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <main class="content" style="max-width: 1120px; margin: 20px auto; padding: 0 12px;">
+      <section class="surface">
+        <p class="eyebrow">Fluxos Operacionais</p>
+        <h2>Fluxos Reais do Dia a Dia (visão de produto)</h2>
+        <p>
+          Esta página mostra como cada operação funciona ponta a ponta: ação do operador,
+          validações, atualização de saldo, histórico e evento.
+        </p>
+      </section>
+
+      <section class="surface">
+        <h3>Fluxo A: Movimentação de Estoque</h3>
+        <pre class="flow-diagram">Operador informa dados -> API /v1/movimentacoes -> valida SKU/endereço/saldo -> atualiza saldo -> grava movimentação -> grava evento</pre>
+        <ul class="plain-list">
+          <li>Endpoint: <a href="../wms/interfaces/api/app.py"><code>POST /v1/movimentacoes</code></a></li>
+          <li>Caso de uso: <a href="../wms/application/use_cases/registrar_movimentacao_estoque.py"><code>registrar_movimentacao_estoque.py</code></a></li>
+          <li>Teste: <a href="../tests/test_registrar_movimentacao_estoque.py"><code>test_registrar_movimentacao_estoque.py</code></a></li>
+          <li>Banco: <a href="../../Database/schema_core.sql"><code>movimentacao_estoque</code> + <code>saldo_estoque</code></a></li>
+        </ul>
+      </section>
+
+      <section class="surface">
+        <h3>Fluxo B: Ajuste de Estoque</h3>
+        <pre class="flow-diagram">Operador informa ajuste + motivo -> API /v1/ajustes -> valida regra -> corrige saldo -> grava ajuste -> grava evento</pre>
+        <ul class="plain-list">
+          <li>Endpoint: <a href="../wms/interfaces/api/app.py"><code>POST /v1/ajustes</code></a></li>
+          <li>Caso de uso: <a href="../wms/application/use_cases/registrar_ajuste_estoque.py"><code>registrar_ajuste_estoque.py</code></a></li>
+          <li>Teste: <a href="../tests/test_registrar_ajuste_estoque.py"><code>test_registrar_ajuste_estoque.py</code></a></li>
+          <li>Banco: <a href="../../Database/schema_core.sql"><code>movimentacao_estoque</code> + <code>saldo_estoque</code></a></li>
+        </ul>
+      </section>
+
+      <section class="surface">
+        <h3>Fluxo C: Recebimento com Conferência</h3>
+        <pre class="flow-diagram">Operador informa nota + itens -> API /v1/recebimentos -> compara esperado x conferido -> atualiza saldo -> grava recebimento -> grava eventos</pre>
+        <ul class="plain-list">
+          <li>Endpoint: <a href="../wms/interfaces/api/app.py"><code>POST /v1/recebimentos</code></a></li>
+          <li>Caso de uso: <a href="../wms/application/use_cases/registrar_recebimento.py"><code>registrar_recebimento.py</code></a></li>
+          <li>Teste: <a href="../tests/test_registrar_recebimento.py"><code>test_registrar_recebimento.py</code></a></li>
+          <li>Banco: <a href="../../Database/schema_core.sql"><code>recebimento</code> + <code>recebimento_item</code> + <code>saldo_estoque</code></a></li>
+        </ul>
+      </section>
+
+      <section class="surface">
+        <h3>Observação Importante</h3>
+        <ul class="plain-list">
+          <li><code>WMS_API_BACKEND=inmemory</code>: fluxo roda para desenvolvimento sem gravar banco real.</li>
+          <li><code>WMS_API_BACKEND=postgres</code>: fluxo persiste no banco PostgreSQL.</li>
+          <li>Transação ativa: se uma etapa falhar, o sistema desfaz tudo.</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

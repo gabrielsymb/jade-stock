@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Docs Estoque | WMS Enxuto</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Material+Symbols+Outlined"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="top-app-bar">
+      <div class="title-wrap">
+        <span class="material-symbols-outlined">inventory_2</span>
+        <h1>Documentação de Estoque</h1>
+      </div>
+      <a class="btn-outline" href="./README.md">Abrir README.md</a>
+    </header>
+
+    <div class="layout">
+      <aside class="side-nav">
+        <a href="#visao-geral">Visão Geral</a>
+        <a href="#mapa-sistema">Mapa do Sistema</a>
+        <a href="#estado-atual">Estado Atual</a>
+        <a href="#fluxo-negocio">Fluxo de Negócio</a>
+        <a href="#api-sem-jargao">API Sem Jargão</a>
+        <a href="#conceitos">Conceitos Traduzidos</a>
+        <a href="#trilha">Trilha Técnica</a>
+        <a href="#modulos">Módulos</a>
+        <a href="#midias">Mídias</a>
+      </aside>
+
+      <main class="content">
+        <section id="visao-geral" class="surface">
+          <p class="eyebrow">WMS Enxuto</p>
+          <h2>Mapa do Produto: do negócio para o sistema</h2>
+          <p>
+            Esta documentação foi reorganizada para quem criou as regras de
+            negócio e quer entender o sistema mesmo sem experiência em Python.
+            Comece no macro, depois avance para os detalhes técnicos.
+          </p>
+          <div class="chip-row">
+            <span class="chip">Visão de negócio primeiro</span>
+            <span class="chip">Sem jargão obrigatório</span>
+            <span class="chip">API pronta para integração</span>
+          </div>
+        </section>
+
+        <section id="mapa-sistema" class="surface">
+          <h3>Mapa do Sistema (macro)</h3>
+          <p>Leitura recomendada para começar (sem duplicidade):</p>
+          <ol class="reading-list">
+            <li><a href="./docs_negocio/index.html">Hub de Negócio (HTML)</a></li>
+            <li><a href="./docs_negocio/trilha_estudo.html">Trilha de Estudo (HTML)</a></li>
+            <li><a href="./docs_negocio/mapa_canvas_conexoes.html">Mapa Canvas de Conexões (HTML)</a></li>
+            <li><a href="./docs_negocio/00_mapa_sistema.md">00 - Mapa do Sistema (MD)</a></li>
+            <li><a href="./docs_negocio/05_guia_de_perguntas_do_dono_do_produto.md">Checklist do Dono do Produto</a></li>
+          </ol>
+        </section>
+
+        <section id="estado-atual" class="surface">
+          <h3>Estado Atual do Projeto</h3>
+          <ul class="plain-list">
+            <li><strong>Casos de uso prontos:</strong> movimentação, ajuste, avaria, recebimento, inventário cíclico, política Kanban, curva ABCD, giro, sazonalidade e governança orçamentária</li>
+            <li><strong>API pronta:</strong> <code>/v1/movimentacoes</code>, <code>/v1/ajustes</code>, <code>/v1/avarias</code>, <code>/v1/recebimentos</code>, <code>/v1/inventarios/ciclico</code>, <code>/v1/kanban/politicas</code>, <code>/v1/curva-abcd/processar</code>, <code>/v1/giro/processar</code>, <code>/v1/sazonalidade/processar</code>, <code>/v1/orcamento/simular</code></li>
+            <li><strong>Testes:</strong> suíte automatizada passando</li>
+            <li><strong>Banco:</strong> schema core validado + schema extended para inventário cíclico</li>
+            <li><strong>Modo de execução:</strong> <code>inmemory</code> (padrão) ou <code>postgres</code></li>
+          </ul>
+        </section>
+
+        <section id="fluxo-negocio" class="surface">
+          <h3>Como o Sistema Trabalha (fluxo visual)</h3>
+          <pre class="flow-diagram">Regra de Negócio -> Caso de Uso -> Validação -> Persistência -> Evento -> API/Integração</pre>
+          <p>
+            Exemplo prático: o PDV chama <code>POST /v1/movimentacoes</code>,
+            o sistema valida as regras, atualiza saldo, grava histórico e gera evento.
+          </p>
+        </section>
+
+        <section id="api-sem-jargao" class="surface">
+          <h3>API Sem Jargão</h3>
+          <p>
+            Endpoint é um "botão remoto" de ação de negócio. Em vez de outro
+            sistema acessar banco direto, ele chama esses botões:
+          </p>
+          <ul class="plain-list">
+            <li><code>POST /v1/movimentacoes</code>: entrada, saída e transferência</li>
+            <li><code>POST /v1/ajustes</code>: correção de estoque com motivo</li>
+            <li><code>POST /v1/avarias</code>: baixa por perda operacional com motivo obrigatório</li>
+            <li><code>POST /v1/recebimentos</code>: entrada com conferência</li>
+            <li><code>POST /v1/inventarios/ciclico</code>: contagem cíclica com ajuste automático</li>
+            <li><code>POST /v1/kanban/politicas</code>: definição de faixas e acionamento de reposição</li>
+            <li><code>POST /v1/curva-abcd/processar</code>: classificação ABCD e atualização de política de cobertura</li>
+            <li><code>POST /v1/giro/processar</code>: cálculo de giro/cobertura e alertas operacionais</li>
+            <li><code>POST /v1/sazonalidade/processar</code>: aplicação de sinal sazonal externo com regras determinísticas</li>
+            <li><code>POST /v1/orcamento/simular</code>: validação financeira da compra com exceções auditáveis</li>
+          </ul>
+        </section>
+
+        <section id="conceitos" class="surface">
+          <h3>Conceitos Técnicos Traduzidos</h3>
+          <ul class="plain-list">
+            <li><strong>FastAPI:</strong> ferramenta para abrir a "porta" da integração</li>
+            <li><strong>Uvicorn:</strong> processo que mantém essa porta ligada</li>
+            <li><strong>Validação:</strong> bloqueio de operação inválida antes de gravar</li>
+            <li><strong>Idempotência:</strong> evitar processar a mesma operação duas vezes</li>
+            <li><strong>Transação:</strong> ou grava tudo, ou cancela tudo</li>
+          </ul>
+        </section>
+
+        <section id="trilha" class="surface">
+          <h3>Trilha Técnica (arquivos completos)</h3>
+          <ol class="reading-list">
+            <li><a href="./Regra_de_negocios/Estoque/wms_enxuto/caso_de_uso/wms_enxuto_mvp.md">WMS Enxuto MVP</a></li>
+            <li><a href="./Regra_de_negocios/Estoque/sku/regra_sku/sku.md">SKU</a></li>
+            <li><a href="./Regra_de_negocios/Estoque/sku/caso_de_uso/cadastro_sku.md">Cadastro de SKU</a></li>
+            <li><a href="./Regra_de_negocios/Estoque/address/address_regra/address.md">Address (Endereçamento Operacional)</a></li>
+            <li><a href="./Regra_de_negocios/Estoque/enderecamento/caso_de_uso/enderecamento_basico.md">Endereçamento Básico (caso de uso)</a></li>
+            <li><a href="./Regra_de_negocios/Estoque/recebimento/caso_de_uso/recebimento_conferencia.md">Recebimento e Conferência</a></li>
+            <li><a href="./Regra_de_negocios/Estoque/avarias/regra_avarias/avarias.md">Avarias</a></li>
+            <li><a href="./Regra_de_negocios/Estoque/kanban/regra_kanban/kanban.md">Kanban de Reposição</a></li>
+            <li><a href="./Regra_de_negocios/Estoque/ciclico/regra_ciclico/ciclico.md">Inventário Cíclico</a></li>
+            <li><a href="./Regra_de_negocios/Estoque/curva/regra_abc/curva_abcd.md">Curva ABCD</a></li>
+            <li><a href="./Regra_de_negocios/Estoque/curva/regra_abc/shelf_life.md">Shelf Life</a></li>
+            <li><a href="./Regra_de_negocios/Estoque/giro/regra_giro/giro_estoque.md">Giro</a></li>
+            <li><a href="./Regra_de_negocios/Estoque/sazonalidade/regra_sazo/sazonalidade.md">Sazonalidade</a></li>
+            <li><a href="./Regra_de_negocios/Estoque/governanca_orcamentaria/regra_orcamentaria.md">Governança Orçamentária</a></li>
+            <li><a href="./Regra_de_negocios/Estoque/integracao/caso_de_uso_executavel_registrar_recebimento.md">Caso Executável: RegistrarRecebimento</a></li>
+            <li><a href="./Regra_de_negocios/Estoque/integracao/caso_de_uso_executavel_registrar_ajuste_estoque.md">Caso Executável: RegistrarAjusteEstoque</a></li>
+            <li><a href="./Regra_de_negocios/Estoque/integracao/matriz_conceitual_abas_api.md">Matriz de Integração</a></li>
+            <li><a href="./Regra_de_negocios/Estoque/integracao/contrato_eventos.md">Contrato de Eventos</a></li>
+            <li><a href="./Regra_de_negocios/Estoque/integracao/dicionario_campos_compartilhados.md">Dicionário de Campos</a></li>
+            <li><a href="../Database/schema_core.sql">Schema Core</a></li>
+            <li><a href="../Database/schema_extended.sql">Schema Extended</a></li>
+          </ol>
+        </section>
+
+        <section id="modulos" class="grid">
+          <article class="card">
+            <h4>Operação (negócio)</h4>
+            <a href="./Regra_de_negocios/Estoque/recebimento/caso_de_uso/recebimento_conferencia.md">Recebimento</a>
+            <a href="./Regra_de_negocios/Estoque/address/address_regra/address.md">Address (Regra)</a>
+            <a href="./Regra_de_negocios/Estoque/enderecamento/caso_de_uso/enderecamento_basico.md">Endereçamento (Caso de Uso)</a>
+            <a href="./Regra_de_negocios/Estoque/kanban/regra_kanban/kanban.md">Kanban</a>
+            <a href="./Regra_de_negocios/Estoque/ciclico/regra_ciclico/ciclico.md">Inventário Cíclico</a>
+            <a href="./Regra_de_negocios/Estoque/avarias/regra_avarias/avarias.md">Avarias</a>
+          </article>
+
+          <article class="card">
+            <h4>Inteligência de Estoque</h4>
+            <a href="./Regra_de_negocios/Estoque/curva/regra_abc/curva_abcd.md">Curva ABCD</a>
+            <a href="./Regra_de_negocios/Estoque/curva/regra_abc/shelf_life.md">Shelf Life</a>
+            <a href="./Regra_de_negocios/Estoque/giro/regra_giro/giro_estoque.md">Giro</a>
+            <a href="./Regra_de_negocios/Estoque/sazonalidade/regra_sazo/sazonalidade.md">Sazonalidade</a>
+          </article>
+
+          <article class="card">
+            <h4>Cadastro e Governança</h4>
+            <a href="./Regra_de_negocios/Estoque/sku/regra_sku/sku.md">Regra SKU</a>
+            <a href="./Regra_de_negocios/Estoque/sku/caso_de_uso/cadastro_sku.md">Cadastro SKU</a>
+            <a href="./Regra_de_negocios/Estoque/governanca_orcamentaria/regra_orcamentaria.md">Orçamento</a>
+          </article>
+
+          <article class="card">
+            <h4>Integração/API (produto)</h4>
+            <a href="./docs_negocio/03_endpoints_sem_jargao.md">Endpoints Sem Jargão</a>
+            <a href="./wms/interfaces/api/README.md">Guia da API v1</a>
+            <a href="./Regra_de_negocios/Estoque/integracao/matriz_conceitual_abas_api.md">Matriz</a>
+            <a href="./Regra_de_negocios/Estoque/integracao/contrato_eventos.md">Eventos</a>
+            <a href="./Regra_de_negocios/Estoque/integracao/dicionario_campos_compartilhados.md">Campos</a>
+          </article>
+
+          <article class="card">
+            <h4>Implementação Técnica (Opcional para Negócio)</h4>
+            <a href="./wms/README.md">Guia Técnico WMS</a>
+            <a href="./wms/infrastructure/postgres/postgres_estoque_repository.py">PostgresEstoqueRepository</a>
+            <a href="./wms/infrastructure/postgres/postgres_inventario_repository.py">PostgresInventarioRepository</a>
+            <a href="./wms/infrastructure/postgres/postgres_movimentacao_repository.py">PostgresMovimentacaoRepository</a>
+            <a href="./wms/infrastructure/postgres/postgres_recebimento_repository.py">PostgresRecebimentoRepository</a>
+            <a href="../Database/schema_core.sql">Schema Core</a>
+            <a href="../Database/schema_extended.sql">Schema Extended</a>
+          </article>
+        </section>
+
+        <section id="midias" class="surface">
+          <h3>Mídias para Treinamento</h3>
+          <p class="media-note">Catálogo por módulo em prateleiras horizontais.</p>
+
+          <div class="media-library netflix-catalog">
+            <article class="media-shelf">
+              <div class="shelf-header">
+                <h4>Address / Endereçamento</h4>
+                <span>1 mídia</span>
+              </div>
+              <div class="shelf-track">
+                <figure class="media-tile">
+                  <img src="./estoque_img/address_img/address.png" alt="Address Endereçamento" />
+                  <figcaption><span class="tag">Imagem</span> Address Operacional</figcaption>
+                </figure>
+              </div>
+            </article>
+
+            <article class="media-shelf">
+              <div class="shelf-header">
+                <h4>Curva ABC</h4>
+                <span>2 mídias</span>
+              </div>
+              <div class="shelf-track">
+                <figure class="media-tile">
+                  <img src="./estoque_img/Curva_ABC_img/Curva_abc.png" alt="Curva ABC" />
+                  <figcaption><span class="tag">Imagem</span> Curva ABC</figcaption>
+                </figure>
+                <figure class="media-tile">
+                  <video controls preload="metadata">
+                    <source src="./estoque_midia/curva_abc_midia/curva_abcd.mp4" type="video/mp4" />
+                  </video>
+                  <figcaption><span class="tag">Vídeo</span> Curva ABC</figcaption>
+                </figure>
+              </div>
+            </article>
+
+            <article class="media-shelf">
+              <div class="shelf-header">
+                <h4>Inventário Cíclico</h4>
+                <span>1 mídia</span>
+              </div>
+              <div class="shelf-track">
+                <figure class="media-tile">
+                  <video controls preload="metadata">
+                    <source src="./estoque_midia/Ciclica_midia/Inventário_Cíclico.mp4" type="video/mp4" />
+                  </video>
+                  <figcaption><span class="tag">Vídeo</span> Inventário Cíclico</figcaption>
+                </figure>
+              </div>
+            </article>
+
+            <article class="media-shelf">
+              <div class="shelf-header">
+                <h4>SKU</h4>
+                <span>1 mídia</span>
+              </div>
+              <div class="shelf-track">
+                <figure class="media-tile">
+                  <img src="./estoque_img/sku_img/sku.png" alt="SKU" />
+                  <figcaption><span class="tag">Imagem</span> Cadastro de SKU</figcaption>
+                </figure>
+              </div>
+            </article>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="media-modal" class="media-modal" aria-hidden="true">
+      <button id="media-modal-close" class="media-modal-close" aria-label="Fechar visualização">×</button>
+      <img id="media-modal-image" class="media-modal-image" alt="" />
+      <p id="media-modal-caption" class="media-modal-caption"></p>
+    </div>
+
+    <script>
+      (function () {
+        const modal = document.getElementById("media-modal");
+        const modalImage = document.getElementById("media-modal-image");
+        const modalCaption = document.getElementById("media-modal-caption");
+        const closeBtn = document.getElementById("media-modal-close");
+        const mediaImages = document.querySelectorAll(".media-tile img");
+
+        const openModal = (img) => {
+          modalImage.src = img.src;
+          modalImage.alt = img.alt || "Imagem ampliada";
+          modalCaption.textContent = img.alt || "";
+          modal.classList.add("open");
+          modal.setAttribute("aria-hidden", "false");
+          document.body.style.overflow = "hidden";
+        };
+
+        const closeModal = () => {
+          modal.classList.remove("open");
+          modal.setAttribute("aria-hidden", "true");
+          modalImage.src = "";
+          document.body.style.overflow = "";
+        };
+
+        mediaImages.forEach((img) => {
+          img.classList.add("zoomable");
+          img.addEventListener("click", () => openModal(img));
+        });
+
+        closeBtn.addEventListener("click", closeModal);
+        modal.addEventListener("click", (event) => {
+          if (event.target === modal) closeModal();
+        });
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape" && modal.classList.contains("open")) {
+            closeModal();
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

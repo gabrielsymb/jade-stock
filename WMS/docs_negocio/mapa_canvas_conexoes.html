@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mapa Canvas | WMS</title>
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <main class="content" style="max-width: 1280px; margin: 20px auto; padding: 0 12px;">
+      <section class="surface">
+        <p class="eyebrow">Mapa Visual do Projeto</p>
+        <h2>Canvas de Conexões</h2>
+        <p>
+          Clique nos cards para abrir os arquivos reais. As setas mostram como a
+          regra de negócio vira código, API e banco.
+        </p>
+      </section>
+
+      <section class="surface">
+        <h3>Fluxo Principal</h3>
+        <pre class="flow-diagram">Regra de Negócio -> Caso de Uso -> API -> Repositórios -> Banco -> Eventos -> Testes</pre>
+      </section>
+
+      <section class="surface">
+        <div class="canvas-lane">
+          <article class="canvas-card">
+            <h4>1. Regras de Negócio</h4>
+            <a href="../Regra_de_negocios/Estoque/integracao/modelagem_dominio_wms.md"><code>.../modelagem_dominio_wms.md</code></a>
+            <a href="../Regra_de_negocios/Estoque/integracao/casos_de_uso_wms.md"><code>.../casos_de_uso_wms.md</code></a>
+            <a href="../Regra_de_negocios/Estoque/integracao/contrato_eventos.md"><code>.../contrato_eventos.md</code></a>
+          </article>
+          <div class="lane-arrow">→</div>
+          <article class="canvas-card">
+            <h4>2. Domínio (regras puras)</h4>
+            <a href="../wms/domain/sku.py"><code>wms/domain/sku.py</code></a>
+            <a href="../wms/domain/endereco.py"><code>wms/domain/endereco.py</code></a>
+            <a href="../wms/domain/saldo_estoque.py"><code>wms/domain/saldo_estoque.py</code></a>
+            <a href="../wms/domain/movimentacao.py"><code>wms/domain/movimentacao.py</code></a>
+            <a href="../wms/domain/recebimento.py"><code>wms/domain/recebimento.py</code></a>
+          </article>
+          <div class="lane-arrow">→</div>
+          <article class="canvas-card">
+            <h4>3. Casos de Uso (aplicação)</h4>
+            <a href="../wms/application/use_cases/registrar_movimentacao_estoque.py"><code>.../registrar_movimentacao_estoque.py</code></a>
+            <a href="../wms/application/use_cases/registrar_ajuste_estoque.py"><code>.../registrar_ajuste_estoque.py</code></a>
+            <a href="../wms/application/use_cases/registrar_recebimento.py"><code>.../registrar_recebimento.py</code></a>
+            <a href="../wms/application/use_cases/registrar_inventario_ciclico.py"><code>.../registrar_inventario_ciclico.py</code></a>
+          </article>
+        </div>
+
+        <div class="lane-drop">↓</div>
+
+        <div class="canvas-lane">
+          <article class="canvas-card">
+            <h4>4. API (integração com PDV/ERP)</h4>
+            <a href="../wms/interfaces/api/app.py"><code>wms/interfaces/api/app.py</code></a>
+            <p><code>/v1/movimentacoes</code></p>
+            <p><code>/v1/ajustes</code></p>
+            <p><code>/v1/recebimentos</code></p>
+            <p><code>/v1/inventarios/ciclico</code></p>
+          </article>
+          <div class="lane-arrow">→</div>
+          <article class="canvas-card">
+            <h4>5. Persistência (Postgres)</h4>
+            <a href="../wms/infrastructure/postgres/postgres_estoque_repository.py"><code>.../postgres_estoque_repository.py</code></a>
+            <a href="../wms/infrastructure/postgres/postgres_inventario_repository.py"><code>.../postgres_inventario_repository.py</code></a>
+            <a href="../wms/infrastructure/postgres/postgres_movimentacao_repository.py"><code>.../postgres_movimentacao_repository.py</code></a>
+            <a href="../wms/infrastructure/postgres/postgres_recebimento_repository.py"><code>.../postgres_recebimento_repository.py</code></a>
+            <a href="../wms/infrastructure/postgres/postgres_event_store.py"><code>.../postgres_event_store.py</code></a>
+          </article>
+          <div class="lane-arrow">→</div>
+          <article class="canvas-card">
+            <h4>6. Banco de Dados</h4>
+            <a href="../../Database/schema_core.sql"><code>Database/schema_core.sql</code></a>
+            <a href="../../Database/schema_extended.sql"><code>Database/schema_extended.sql</code></a>
+            <a href="../../Database/README.md"><code>Database/README.md</code></a>
+          </article>
+        </div>
+
+        <div class="lane-drop">↓</div>
+
+        <div class="canvas-lane canvas-lane-center">
+          <article class="canvas-card canvas-card-wide">
+            <h4>7. Testes (prova do comportamento)</h4>
+            <a href="../tests/test_registrar_movimentacao_estoque.py"><code>tests/test_registrar_movimentacao_estoque.py</code></a>
+            <a href="../tests/test_registrar_ajuste_estoque.py"><code>tests/test_registrar_ajuste_estoque.py</code></a>
+            <a href="../tests/test_registrar_recebimento.py"><code>tests/test_registrar_recebimento.py</code></a>
+            <a href="../tests/test_registrar_inventario_ciclico.py"><code>tests/test_registrar_inventario_ciclico.py</code></a>
+            <a href="../tests/test_postgres_inventario_integration.py"><code>tests/test_postgres_inventario_integration.py</code></a>
+            <a href="../tests/test_postgres_transactional_behavior.py"><code>tests/test_postgres_transactional_behavior.py</code></a>
+            <a href="../tests/test_api_inmemory.py"><code>tests/test_api_inmemory.py</code></a>
+            <a href="../tests/test_api_postgres_integration.py"><code>tests/test_api_postgres_integration.py</code></a>
+          </article>
+        </div>
+      </section>
+
+      <section class="surface">
+        <h3>Como ler este canvas</h3>
+        <ul class="plain-list">
+          <li><strong>Esquerda para direita:</strong> pensamento de negócio virando execução técnica.</li>
+          <li><strong>Cima para baixo:</strong> do conceito para o dado gravado e validado.</li>
+          <li><strong>Tests:</strong> garantem que o comportamento ficou fiel à regra original.</li>
+        </ul>
+      </section>
+
+      <section class="surface">
+        <h3>Atalhos</h3>
+        <ul class="plain-list">
+          <li><a href="./trilha_estudo.html">Trilha de Estudo</a></li>
+          <li><a href="./mapa_modulos.html">Mapa de Módulos</a></li>
+          <li><a href="./index.html">Hub de Negócio</a></li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

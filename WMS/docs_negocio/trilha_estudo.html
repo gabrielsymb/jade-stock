@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trilha de Estudo | WMS</title>
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <main class="content" style="max-width: 1160px; margin: 20px auto; padding: 0 12px;">
+      <section class="surface">
+        <p class="eyebrow">Trilha Guiada</p>
+        <h2>Estudo do Projeto WMS em Ordem Certa</h2>
+        <p>
+          Esta trilha foi feita para estudar sem se perder. Cada etapa mostra
+          o que abrir, o que entender e o resultado esperado.
+        </p>
+        <div class="chip-row">
+          <span class="chip">Sem jargão obrigatório</span>
+          <span class="chip">Com links reais de arquivos</span>
+          <span class="chip">Do macro para o técnico</span>
+        </div>
+      </section>
+
+      <section class="surface">
+        <h3>Etapa 1: Entender o produto (macro)</h3>
+        <ul class="plain-list">
+          <li>Abrir: <a href="./00_mapa_sistema.md"><code>docs_negocio/00_mapa_sistema.md</code></a></li>
+          <li>Abrir: <a href="./01_modulos_responsabilidades.md"><code>docs_negocio/01_modulos_responsabilidades.md</code></a></li>
+          <li>Abrir: <a href="./02_fluxos_reais_do_dia_a_dia.md"><code>docs_negocio/02_fluxos_reais_do_dia_a_dia.md</code></a></li>
+        </ul>
+        <p><strong>Resultado esperado:</strong> você consegue explicar o WMS sem falar de código.</p>
+      </section>
+
+      <section class="surface">
+        <h3>Etapa 2: Entender as regras de negócio origem</h3>
+        <ul class="plain-list">
+          <li>Abrir: <a href="../Regra_de_negocios/Estoque/sku/regra_sku/sku.md"><code>Regra_de_negocios/Estoque/sku/regra_sku/sku.md</code></a></li>
+          <li>Abrir: <a href="../Regra_de_negocios/Estoque/address/address_regra/address.md"><code>Regra_de_negocios/Estoque/address/address_regra/address.md</code></a></li>
+          <li>Abrir: <a href="../Regra_de_negocios/Estoque/recebimento/caso_de_uso/recebimento_conferencia.md"><code>Regra_de_negocios/Estoque/recebimento/caso_de_uso/recebimento_conferencia.md</code></a></li>
+          <li>Abrir: <a href="../Regra_de_negocios/Estoque/integracao/contrato_eventos.md"><code>Regra_de_negocios/Estoque/integracao/contrato_eventos.md</code></a></li>
+        </ul>
+        <p><strong>Resultado esperado:</strong> você confirma o contrato de negócio que o sistema deve obedecer.</p>
+      </section>
+
+      <section class="surface">
+        <h3>Etapa 3: Entender o que já está implementado</h3>
+        <ul class="plain-list">
+          <li>Movimentação: <a href="../wms/application/use_cases/registrar_movimentacao_estoque.py"><code>wms/application/use_cases/registrar_movimentacao_estoque.py</code></a></li>
+          <li>Ajuste: <a href="../wms/application/use_cases/registrar_ajuste_estoque.py"><code>wms/application/use_cases/registrar_ajuste_estoque.py</code></a></li>
+          <li>Recebimento: <a href="../wms/application/use_cases/registrar_recebimento.py"><code>wms/application/use_cases/registrar_recebimento.py</code></a></li>
+          <li>Inventário cíclico: <a href="../wms/application/use_cases/registrar_inventario_ciclico.py"><code>wms/application/use_cases/registrar_inventario_ciclico.py</code></a></li>
+          <li>API: <a href="../wms/interfaces/api/app.py"><code>wms/interfaces/api/app.py</code></a></li>
+        </ul>
+        <p><strong>Resultado esperado:</strong> você enxerga quais fluxos já saíram do papel.</p>
+      </section>
+
+      <section class="surface">
+        <h3>Etapa 4: Entender persistência e banco</h3>
+        <ul class="plain-list">
+          <li>Schema atual: <a href="../../Database/schema_core.sql"><code>Database/schema_core.sql</code></a></li>
+          <li>Schema futuro: <a href="../../Database/schema_extended.sql"><code>Database/schema_extended.sql</code></a></li>
+          <li>Guia banco: <a href="../../Database/README.md"><code>Database/README.md</code></a></li>
+          <li>Repo estoque: <a href="../wms/infrastructure/postgres/postgres_estoque_repository.py"><code>wms/infrastructure/postgres/postgres_estoque_repository.py</code></a></li>
+          <li>Repo movimentação: <a href="../wms/infrastructure/postgres/postgres_movimentacao_repository.py"><code>wms/infrastructure/postgres/postgres_movimentacao_repository.py</code></a></li>
+          <li>Repo recebimento: <a href="../wms/infrastructure/postgres/postgres_recebimento_repository.py"><code>wms/infrastructure/postgres/postgres_recebimento_repository.py</code></a></li>
+          <li>Event store: <a href="../wms/infrastructure/postgres/postgres_event_store.py"><code>wms/infrastructure/postgres/postgres_event_store.py</code></a></li>
+        </ul>
+        <p><strong>Resultado esperado:</strong> você entende onde o sistema grava os fatos de negócio.</p>
+      </section>
+
+      <section class="surface">
+        <h3>Etapa 5: Validar qualidade com testes</h3>
+        <ul class="plain-list">
+          <li>Teste movimentação: <a href="../tests/test_registrar_movimentacao_estoque.py"><code>tests/test_registrar_movimentacao_estoque.py</code></a></li>
+          <li>Teste ajuste: <a href="../tests/test_registrar_ajuste_estoque.py"><code>tests/test_registrar_ajuste_estoque.py</code></a></li>
+          <li>Teste recebimento: <a href="../tests/test_registrar_recebimento.py"><code>tests/test_registrar_recebimento.py</code></a></li>
+          <li>Teste inventário cíclico: <a href="../tests/test_registrar_inventario_ciclico.py"><code>tests/test_registrar_inventario_ciclico.py</code></a></li>
+          <li>Teste Postgres inventário: <a href="../tests/test_postgres_inventario_integration.py"><code>tests/test_postgres_inventario_integration.py</code></a></li>
+          <li>Teste API: <a href="../tests/test_api_inmemory.py"><code>tests/test_api_inmemory.py</code></a></li>
+          <li>Teste API Postgres: <a href="../tests/test_api_postgres_integration.py"><code>tests/test_api_postgres_integration.py</code></a></li>
+          <li>Teste transação/concurrency: <a href="../tests/test_postgres_transactional_behavior.py"><code>tests/test_postgres_transactional_behavior.py</code></a></li>
+        </ul>
+        <p><strong>Resultado esperado:</strong> você sabe como o projeto prova que não está quebrando regra.</p>
+      </section>
+
+      <section class="surface">
+        <h3>Etapa 6: Planejar próximos casos (cíclico, kanban, avarias)</h3>
+        <ol class="reading-list">
+          <li>Abrir backlog oficial: <a href="./06_modulos_de_negocio_pendentes.md"><code>docs_negocio/06_modulos_de_negocio_pendentes.md</code></a></li>
+          <li>Definir input/output de negócio do próximo caso</li>
+          <li>Definir validações explícitas</li>
+          <li>Definir evento emitido</li>
+          <li>Implementar caso de uso + testes</li>
+          <li>Expor endpoint API somente depois do teste verde</li>
+        </ol>
+        <p>
+          Referência de modelagem: <a href="../Regra_de_negocios/Estoque/integracao/modelagem_dominio_wms.md"><code>Regra_de_negocios/Estoque/integracao/modelagem_dominio_wms.md</code></a>
+        </p>
+      </section>
+
+      <section class="surface">
+        <h3>Apoio visual</h3>
+        <ul class="plain-list">
+          <li><a href="./mapa_canvas_conexoes.html">Abrir Mapa Canvas (estilo Obsidian)</a></li>
+          <li><a href="./mapa_modulos.html">Abrir Mapa de Módulos</a></li>
+          <li><a href="./index.html">Voltar ao Hub de Negócio</a></li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

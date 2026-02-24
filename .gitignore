@@ -1,0 +1,14 @@
+# Projeto (venv local na raiz)
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Artefatos locais / backup
+*.zip
+WMS/.env
+WMS/.env.*
+!WMS/.env.example
+WMS/.git_backup_*/
+WMS/.git_wms_backup_*/

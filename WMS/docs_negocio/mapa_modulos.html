@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mapa de Módulos | WMS</title>
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <main class="content" style="max-width: 1100px; margin: 20px auto; padding: 0 12px;">
+      <section class="surface">
+        <p class="eyebrow">Mapa de Arquivos</p>
+        <h2>Módulos, responsabilidades e caminhos</h2>
+        <p>
+          Esta página liga cada módulo de negócio aos arquivos reais do projeto.
+          Assim você consegue entender "onde está cada coisa" sem abrir código aleatório.
+        </p>
+      </section>
+
+      <section class="surface">
+        <h3>Cadastro (SKU)</h3>
+        <ul class="plain-list">
+          <li>Regra: <a href="../Regra_de_negocios/Estoque/sku/regra_sku/sku.md"><code>Regra_de_negocios/Estoque/sku/regra_sku/sku.md</code></a></li>
+          <li>Caso de uso: <a href="../Regra_de_negocios/Estoque/sku/caso_de_uso/cadastro_sku.md"><code>Regra_de_negocios/Estoque/sku/caso_de_uso/cadastro_sku.md</code></a></li>
+          <li>Domínio: <a href="../wms/domain/sku.py"><code>wms/domain/sku.py</code></a></li>
+          <li>Banco: <a href="../../Database/schema_core.sql"><code>Database/schema_core.sql</code></a> (tabela <code>sku</code>)</li>
+        </ul>
+      </section>
+
+      <section class="surface">
+        <h3>Endereçamento</h3>
+        <ul class="plain-list">
+          <li>Regra: <a href="../Regra_de_negocios/Estoque/address/address_regra/address.md"><code>Regra_de_negocios/Estoque/address/address_regra/address.md</code></a></li>
+          <li>Caso de uso: <a href="../Regra_de_negocios/Estoque/enderecamento/caso_de_uso/enderecamento_basico.md"><code>Regra_de_negocios/Estoque/enderecamento/caso_de_uso/enderecamento_basico.md</code></a></li>
+          <li>Domínio: <a href="../wms/domain/endereco.py"><code>wms/domain/endereco.py</code></a></li>
+          <li>Banco: <a href="../../Database/schema_core.sql"><code>Database/schema_core.sql</code></a> (tabela <code>endereco</code>)</li>
+        </ul>
+      </section>
+
+      <section class="surface">
+        <h3>Movimentação</h3>
+        <ul class="plain-list">
+          <li>Caso executável: <a href="../wms/application/use_cases/registrar_movimentacao_estoque.py"><code>wms/application/use_cases/registrar_movimentacao_estoque.py</code></a></li>
+          <li>Endpoint: <a href="../wms/interfaces/api/app.py"><code>POST /v1/movimentacoes</code></a></li>
+          <li>Repositório Postgres: <a href="../wms/infrastructure/postgres/postgres_movimentacao_repository.py"><code>wms/infrastructure/postgres/postgres_movimentacao_repository.py</code></a></li>
+          <li>Saldo Postgres: <a href="../wms/infrastructure/postgres/postgres_estoque_repository.py"><code>wms/infrastructure/postgres/postgres_estoque_repository.py</code></a></li>
+          <li>Teste: <a href="../tests/test_registrar_movimentacao_estoque.py"><code>tests/test_registrar_movimentacao_estoque.py</code></a></li>
+          <li>Tabelas: <a href="../../Database/schema_core.sql"><code>movimentacao_estoque</code> e <code>saldo_estoque</code></a></li>
+        </ul>
+      </section>
+
+      <section class="surface">
+        <h3>Ajuste</h3>
+        <ul class="plain-list">
+          <li>Caso executável: <a href="../wms/application/use_cases/registrar_ajuste_estoque.py"><code>wms/application/use_cases/registrar_ajuste_estoque.py</code></a></li>
+          <li>Endpoint: <a href="../wms/interfaces/api/app.py"><code>POST /v1/ajustes</code></a></li>
+          <li>Teste: <a href="../tests/test_registrar_ajuste_estoque.py"><code>tests/test_registrar_ajuste_estoque.py</code></a></li>
+          <li>Tabelas: <a href="../../Database/schema_core.sql"><code>movimentacao_estoque</code> e <code>saldo_estoque</code></a></li>
+        </ul>
+      </section>
+
+      <section class="surface">
+        <h3>Recebimento</h3>
+        <ul class="plain-list">
+          <li>Caso executável: <a href="../wms/application/use_cases/registrar_recebimento.py"><code>wms/application/use_cases/registrar_recebimento.py</code></a></li>
+          <li>Endpoint: <a href="../wms/interfaces/api/app.py"><code>POST /v1/recebimentos</code></a></li>
+          <li>Repositório Postgres: <a href="../wms/infrastructure/postgres/postgres_recebimento_repository.py"><code>wms/infrastructure/postgres/postgres_recebimento_repository.py</code></a></li>
+          <li>Teste: <a href="../tests/test_registrar_recebimento.py"><code>tests/test_registrar_recebimento.py</code></a></li>
+          <li>Tabelas: <a href="../../Database/schema_core.sql"><code>recebimento</code> e <code>recebimento_item</code></a></li>
+        </ul>
+      </section>
+
+      <section class="surface">
+        <h3>Eventos, API e Banco</h3>
+        <ul class="plain-list">
+          <li>Contrato de eventos: <a href="../Regra_de_negocios/Estoque/integracao/contrato_eventos.md"><code>Regra_de_negocios/Estoque/integracao/contrato_eventos.md</code></a></li>
+          <li>Event Store: <a href="../wms/infrastructure/postgres/postgres_event_store.py"><code>wms/infrastructure/postgres/postgres_event_store.py</code></a></li>
+          <li>API principal: <a href="../wms/interfaces/api/app.py"><code>wms/interfaces/api/app.py</code></a></li>
+          <li>Schema core: <a href="../../Database/schema_core.sql"><code>Database/schema_core.sql</code></a></li>
+          <li>Schema extended: <a href="../../Database/schema_extended.sql"><code>Database/schema_extended.sql</code></a></li>
+          <li>Guia do banco: <a href="../../Database/README.md"><code>Database/README.md</code></a></li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
