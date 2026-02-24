@@ -71,11 +71,65 @@
       </section>
 
       <section class="surface">
+        <h3>Avarias</h3>
+        <ul class="plain-list">
+          <li>Caso executável: <a href="../wms/application/use_cases/registrar_avaria_estoque.py"><code>wms/application/use_cases/registrar_avaria_estoque.py</code></a></li>
+          <li>Endpoint: <a href="../wms/interfaces/api/app.py"><code>POST /v1/avarias</code></a></li>
+          <li>Teste: <a href="../tests/test_registrar_avaria_estoque.py"><code>tests/test_registrar_avaria_estoque.py</code></a></li>
+          <li>Tabelas: <a href="../../Database/schema_core.sql"><code>movimentacao_estoque</code> e <code>saldo_estoque</code></a></li>
+        </ul>
+      </section>
+
+      <section class="surface">
+        <h3>Inventário Cíclico</h3>
+        <ul class="plain-list">
+          <li>Caso executável: <a href="../wms/application/use_cases/registrar_inventario_ciclico.py"><code>wms/application/use_cases/registrar_inventario_ciclico.py</code></a></li>
+          <li>Endpoint: <a href="../wms/interfaces/api/app.py"><code>POST /v1/inventarios/ciclico</code></a></li>
+          <li>Repositório Postgres: <a href="../wms/infrastructure/postgres/postgres_inventario_repository.py"><code>wms/infrastructure/postgres/postgres_inventario_repository.py</code></a></li>
+          <li>Teste: <a href="../tests/test_registrar_inventario_ciclico.py"><code>tests/test_registrar_inventario_ciclico.py</code></a></li>
+          <li>Tabela: <a href="../../Database/schema_extended.sql"><code>inventario_contagem</code></a></li>
+        </ul>
+      </section>
+
+      <section class="surface">
+        <h3>Kanban e Política de Reposição</h3>
+        <ul class="plain-list">
+          <li>Caso executável: <a href="../wms/application/use_cases/registrar_politica_kanban.py"><code>wms/application/use_cases/registrar_politica_kanban.py</code></a></li>
+          <li>Endpoint: <a href="../wms/interfaces/api/app.py"><code>POST /v1/kanban/politicas</code></a></li>
+          <li>Repositórios: <a href="../wms/infrastructure/postgres/postgres_kanban_repository.py"><code>postgres_kanban_repository.py</code></a> e <a href="../wms/infrastructure/postgres/postgres_politica_reposicao_repository.py"><code>postgres_politica_reposicao_repository.py</code></a></li>
+          <li>Teste: <a href="../tests/test_registrar_politica_kanban.py"><code>tests/test_registrar_politica_kanban.py</code></a></li>
+        </ul>
+      </section>
+
+      <section class="surface">
+        <h3>Curva ABCD, Giro e Sazonalidade</h3>
+        <ul class="plain-list">
+          <li>Casos executáveis: <a href="../wms/application/use_cases/processar_curva_abcd.py"><code>processar_curva_abcd.py</code></a>, <a href="../wms/application/use_cases/processar_giro_estoque.py"><code>processar_giro_estoque.py</code></a>, <a href="../wms/application/use_cases/processar_sazonalidade_operacional.py"><code>processar_sazonalidade_operacional.py</code></a></li>
+          <li>Endpoints: <a href="../wms/interfaces/api/app.py"><code>/v1/curva-abcd/processar</code>, <code>/v1/giro/processar</code> e <code>/v1/sazonalidade/processar</code></a></li>
+          <li>Repositórios: <a href="../wms/infrastructure/postgres/postgres_politica_reposicao_repository.py"><code>postgres_politica_reposicao_repository.py</code></a> e <a href="../wms/infrastructure/postgres/postgres_sinal_externo_repository.py"><code>postgres_sinal_externo_repository.py</code></a></li>
+          <li>Testes: <a href="../tests/test_processar_curva_abcd.py"><code>test_processar_curva_abcd.py</code></a>, <a href="../tests/test_processar_giro_estoque.py"><code>test_processar_giro_estoque.py</code></a>, <a href="../tests/test_processar_sazonalidade_operacional.py"><code>test_processar_sazonalidade_operacional.py</code></a></li>
+        </ul>
+      </section>
+
+      <section class="surface">
+        <h3>Governança Orçamentária</h3>
+        <ul class="plain-list">
+          <li>Caso executável: <a href="../wms/application/use_cases/processar_governanca_orcamentaria.py"><code>wms/application/use_cases/processar_governanca_orcamentaria.py</code></a></li>
+          <li>Endpoint: <a href="../wms/interfaces/api/app.py"><code>POST /v1/orcamento/simular</code></a></li>
+          <li>Repositório Postgres: <a href="../wms/infrastructure/postgres/postgres_orcamento_repository.py"><code>wms/infrastructure/postgres/postgres_orcamento_repository.py</code></a></li>
+          <li>Teste: <a href="../tests/test_processar_governanca_orcamentaria.py"><code>tests/test_processar_governanca_orcamentaria.py</code></a></li>
+        </ul>
+      </section>
+
+      <section class="surface">
         <h3>Eventos, API e Banco</h3>
         <ul class="plain-list">
           <li>Contrato de eventos: <a href="../Regra_de_negocios/Estoque/integracao/contrato_eventos.md"><code>Regra_de_negocios/Estoque/integracao/contrato_eventos.md</code></a></li>
           <li>Event Store: <a href="../wms/infrastructure/postgres/postgres_event_store.py"><code>wms/infrastructure/postgres/postgres_event_store.py</code></a></li>
+          <li>Idempotência: <a href="../wms/infrastructure/postgres/postgres_idempotency_repository.py"><code>wms/infrastructure/postgres/postgres_idempotency_repository.py</code></a></li>
           <li>API principal: <a href="../wms/interfaces/api/app.py"><code>wms/interfaces/api/app.py</code></a></li>
+          <li>SDK (raiz do monorepo): <a href="../../sdk/README.md"><code>sdk/README.md</code></a></li>
+          <li>Versionamento API: <a href="../API_VERSIONING.md"><code>API_VERSIONING.md</code></a></li>
           <li>Schema core: <a href="../../Database/schema_core.sql"><code>Database/schema_core.sql</code></a></li>
           <li>Schema extended: <a href="../../Database/schema_extended.sql"><code>Database/schema_extended.sql</code></a></li>
           <li>Guia do banco: <a href="../../Database/README.md"><code>Database/README.md</code></a></li>

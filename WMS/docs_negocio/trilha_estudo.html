@@ -85,14 +85,14 @@
       </section>
 
       <section class="surface">
-        <h3>Etapa 6: Planejar próximos casos (cíclico, kanban, avarias)</h3>
+        <h3>Etapa 6: Operação real, governança e evolução</h3>
         <ol class="reading-list">
           <li>Abrir backlog oficial: <a href="./06_modulos_de_negocio_pendentes.md"><code>docs_negocio/06_modulos_de_negocio_pendentes.md</code></a></li>
-          <li>Definir input/output de negócio do próximo caso</li>
-          <li>Definir validações explícitas</li>
-          <li>Definir evento emitido</li>
-          <li>Implementar caso de uso + testes</li>
-          <li>Expor endpoint API somente depois do teste verde</li>
+          <li>Conferir que os módulos core e extended já estão ativos (avaria, cíclico, kanban, curva, giro, sazonalidade e orçamento)</li>
+          <li>Padronizar erro HTTP e contrato externo (SDK)</li>
+          <li>Validar idempotência e release gate antes de deploy</li>
+          <li>Definir próximos incrementos de produto (IA/estatística e contábil por eventos)</li>
+          <li>Executar nova entrega sempre em ordem: regra -> teste -> API -> documentação</li>
         </ol>
         <p>
           Referência de modelagem: <a href="../Regra_de_negocios/Estoque/integracao/modelagem_dominio_wms.md"><code>Regra_de_negocios/Estoque/integracao/modelagem_dominio_wms.md</code></a>
