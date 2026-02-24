@@ -413,6 +413,13 @@
       user-select: none;
       transition: background .15s;
     }
+    details.module[id="etapa-a"] summary,
+    details.module[id="etapa-b"] summary,
+    details.module[id="etapa-c"] summary,
+    details.module:has(.num-base) summary { border-left: 4px solid var(--base); }
+    details.module:has(.num-dados) summary { border-left: 4px solid var(--dados); }
+    details.module:has(.num-fin) summary  { border-left: 4px solid var(--fin); }
+    details.module:has(.num-prod) summary { border-left: 4px solid var(--prod); }
     details.module summary:hover { background: var(--surface-2); }
     details.module summary::-webkit-details-marker { display: none; }
 
@@ -468,6 +475,34 @@
     .tag-dados { background: var(--dados-lt); color: var(--dados); }
     .tag-fin   { background: var(--fin-lt);   color: var(--fin); }
     .tag-prod  { background: var(--prod-lt);  color: var(--prod); }
+
+    /* ── PRIORITY STRIP ──────────────────────────── */
+    .priority-strip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--ink-3);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .priority-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .p-base  .priority-dot { background: var(--base); }
+    .p-dados .priority-dot { background: var(--dados); }
+    .p-fin   .priority-dot { background: var(--fin); }
+    .p-prod  .priority-dot { background: var(--prod); }
+    .p-base  { color: var(--base); }
+    .p-dados { color: var(--dados); }
+    .p-fin   { color: var(--fin); }
+    .p-prod  { color: var(--prod); }
 
     /* ── MODULE BODY ─────────────────────────────── */
     .module-body {
@@ -831,7 +866,7 @@
               <h3>API madura em produção</h3>
               <span class="meta">Contrato externo estável, semântica HTTP, idempotência e versionamento</span>
             </div>
-            <span class="module-tag tag-base">Base</span>
+            <div class="priority-strip p-base"><span class="priority-dot"></span>Prioridade 1 — Produto</div>
             <svg class="module-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
           </summary>
           <div class="module-body">
@@ -908,7 +943,7 @@
               <h3>PostgreSQL — concorrência e consistência</h3>
               <span class="meta">Travas transacionais para não corromper saldo nem duplicar eventos</span>
             </div>
-            <span class="module-tag tag-base">Base</span>
+            <div class="priority-strip p-base"><span class="priority-dot"></span>Prioridade 1 — Produto</div>
             <svg class="module-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
           </summary>
           <div class="module-body">
@@ -985,7 +1020,7 @@
               <h3>Arquitetura orientada a eventos</h3>
               <span class="meta">Fundação para IA e Contábil consumirem o WMS sem acoplamento frágil</span>
             </div>
-            <span class="module-tag tag-base">Base</span>
+            <div class="priority-strip p-base"><span class="priority-dot"></span>Prioridade 1 — Produto</div>
             <svg class="module-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
           </summary>
           <div class="module-body">
@@ -1062,7 +1097,7 @@
               <h3>Estatística aplicada — ARIMA e SARIMA</h3>
               <span class="meta">Base obrigatória antes de rede neural: previsão explicável e benchmark honesto</span>
             </div>
-            <span class="module-tag tag-dados">Dados / IA</span>
+            <div class="priority-strip p-dados"><span class="priority-dot"></span>Prioridade 2 — Dados / IA</div>
             <svg class="module-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
           </summary>
           <div class="module-body">
@@ -1145,7 +1180,7 @@
               <h3>Redes neurais para forecast — sem hype</h3>
               <span class="meta">Modelo neural só entra quando superar o baseline com estabilidade comprovada</span>
             </div>
-            <span class="module-tag tag-dados">Dados / IA</span>
+            <div class="priority-strip p-dados"><span class="priority-dot"></span>Prioridade 2 — Dados / IA</div>
             <svg class="module-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
           </summary>
           <div class="module-body">
@@ -1229,7 +1264,7 @@
               <h3>MLOps e governança de modelos</h3>
               <span class="meta">Rastreabilidade de experimento, produção e rollback sem improviso</span>
             </div>
-            <span class="module-tag tag-dados">Dados / IA</span>
+            <div class="priority-strip p-dados"><span class="priority-dot"></span>Prioridade 2 — Dados / IA</div>
             <svg class="module-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
           </summary>
           <div class="module-body">
@@ -1298,7 +1333,7 @@
               <h3>Contábil orientado a eventos</h3>
               <span class="meta">6 sub-módulos progressivos — partidas dobradas até fechamento e reconciliação</span>
             </div>
-            <span class="module-tag tag-fin">Financeiro</span>
+            <div class="priority-strip p-fin"><span class="priority-dot"></span>Prioridade 3 — Operação</div>
             <svg class="module-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
           </summary>
           <div class="module-body">
@@ -1662,7 +1697,7 @@
               <h3>IAM — OAuth2, OIDC e licença por tenant</h3>
               <span class="meta">Segurança de acesso e modelo comercial sem acoplar lógica no cliente</span>
             </div>
-            <span class="module-tag tag-prod">Produção</span>
+            <div class="priority-strip p-prod"><span class="priority-dot"></span>Prioridade 3 — Operação</div>
             <svg class="module-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
           </summary>
           <div class="module-body">
@@ -1740,7 +1775,7 @@
               <h3>Observabilidade e operação contínua</h3>
               <span class="meta">Saúde do sistema visível em tempo real, com resposta rápida a incidentes</span>
             </div>
-            <span class="module-tag tag-prod">Produção</span>
+            <div class="priority-strip p-prod"><span class="priority-dot"></span>Prioridade 3 — Operação</div>
             <svg class="module-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
           </summary>
           <div class="module-body">
