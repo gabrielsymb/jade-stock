@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Laboratorio Deposito de Bebidas | Jade-stock SDK</title>
+    <style>
+      :root {
+        --bg: #0b1220;
+        --panel: #121b2c;
+        --panel-2: #19243a;
+        --text: #e7edf7;
+        --muted: #9fb0cc;
+        --brand: #2f80ed;
+        --brand-2: #2563eb;
+        --ok: #16a34a;
+        --warn: #eab308;
+        --danger: #ef4444;
+        --stroke: #2d3a56;
+        --radius: 14px;
+        --shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(900px 500px at 0% -10%, #1e3a8a 0%, transparent 65%),
+          radial-gradient(900px 600px at 100% -5%, #0f766e 0%, transparent 65%),
+          linear-gradient(180deg, #0b1220 0%, #0f172a 100%);
+      }
+
+      .wrap {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 22px;
+        display: grid;
+        gap: 16px;
+      }
+
+      .hero,
+      .panel {
+        border: 1px solid var(--stroke);
+        border-radius: var(--radius);
+        background: color-mix(in srgb, var(--panel) 90%, black);
+        box-shadow: var(--shadow);
+      }
+
+      .hero { padding: 20px; }
+      .panel { padding: 16px; }
+
+      h1 {
+        margin: 0 0 8px;
+        line-height: 1.15;
+        font-size: clamp(26px, 3.7vw, 42px);
+      }
+
+      h2 {
+        margin: 0 0 10px;
+        font-size: 20px;
+      }
+
+      p { margin: 0; line-height: 1.6; }
+
+      .muted { color: var(--muted); }
+
+      .chips {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+      }
+
+      .chip {
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid #31528e;
+        color: #d7e8ff;
+        background: #1f3050;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 16px;
+      }
+
+      label {
+        display: block;
+        margin: 10px 0 6px;
+        font-weight: 700;
+      }
+
+      input,
+      select,
+      textarea,
+      button {
+        width: 100%;
+        border-radius: 10px;
+        border: 1px solid #38507c;
+        background: #101a2d;
+        color: var(--text);
+        padding: 10px 12px;
+        font: inherit;
+      }
+
+      textarea {
+        min-height: 280px;
+        resize: vertical;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      button {
+        background: linear-gradient(90deg, var(--brand) 0%, var(--brand-2) 100%);
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      button:hover { filter: brightness(1.05); }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 10px;
+      }
+
+      .quick {
+        border: 1px dashed #4e6b9e;
+        border-radius: 12px;
+        padding: 10px;
+        background: #15223b;
+      }
+
+      .quick strong { display: block; margin-bottom: 6px; }
+      .quick button { padding: 8px 10px; font-size: 13px; }
+
+      .badge {
+        display: inline-block;
+        border-radius: 8px;
+        padding: 3px 8px;
+        font-size: 12px;
+        font-weight: 700;
+        margin-left: 8px;
+      }
+
+      .ok { background: rgba(22, 163, 74, 0.22); color: #9ae6b4; }
+      .err { background: rgba(239, 68, 68, 0.22); color: #fecaca; }
+      .pending { background: rgba(234, 179, 8, 0.22); color: #fde68a; }
+
+      pre {
+        margin: 10px 0 0;
+        border: 1px solid #36507f;
+        background: #0d1628;
+        border-radius: 10px;
+        padding: 12px;
+        overflow: auto;
+        max-height: 450px;
+        font-size: 13px;
+      }
+
+      .small {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      @media (max-width: 980px) {
+        .grid,
+        .row { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <section class="hero">
+        <h1>Laboratorio Deposito de Bebidas</h1>
+        <p class="muted">
+          Frontend fake para testar API do Jade-stock na pratica. A tela chama um backend local que usa o SDK Python
+          e dispara os metodos reais da API WMS.
+        </p>
+        <div class="chips">
+          <span class="chip">SDK real</span>
+          <span class="chip">API real</span>
+          <span class="chip">Resposta em tempo real</span>
+          <span class="chip">Dopamina visual para estudo</span>
+        </div>
+      </section>
+
+      <section class="grid">
+        <article class="panel">
+          <h2>Configuracao da chamada</h2>
+          <div class="row">
+            <div>
+              <label for="baseUrl">Base URL da API WMS</label>
+              <input id="baseUrl" type="text" value="http://127.0.0.1:8000" />
+            </div>
+            <div>
+              <label for="bearer">Bearer token (opcional)</label>
+              <input id="bearer" type="text" placeholder="deixe vazio se nao usa auth" />
+            </div>
+          </div>
+
+          <label for="operation">Operacao (SDK)</label>
+          <select id="operation"></select>
+
+          <label for="payload">Payload JSON</label>
+          <textarea id="payload"></textarea>
+
+          <div class="row" style="margin-top: 10px;">
+            <button id="btnTemplate" type="button">Carregar template da operacao</button>
+            <button id="btnRun" type="button">Executar chamada via SDK</button>
+          </div>
+
+          <p class="small" style="margin-top: 10px;">
+            Dica: use correlation_id unico por tentativa para facilitar rastreio.
+          </p>
+        </article>
+
+        <article class="panel">
+          <h2>Retorno da execucao <span id="statusBadge" class="badge pending">aguardando</span></h2>
+          <div class="actions">
+            <div class="quick">
+              <strong>Quick test: Health</strong>
+              <button type="button" data-quick="health">Testar /v1/health</button>
+            </div>
+            <div class="quick">
+              <strong>Quick test: Entrada SKU</strong>
+              <button type="button" data-quick="registrar_movimentacao">Enviar entrada exemplo</button>
+            </div>
+            <div class="quick">
+              <strong>Quick test: Recebimento</strong>
+              <button type="button" data-quick="registrar_recebimento">Enviar recebimento exemplo</button>
+            </div>
+            <div class="quick">
+              <strong>Quick test: Inventario ciclico</strong>
+              <button type="button" data-quick="registrar_inventario_ciclico">Enviar inventario exemplo</button>
+            </div>
+          </div>
+
+          <pre id="output">Sem execucao ainda.</pre>
+        </article>
+      </section>
+    </div>
+
+    <script>
+      const operationSelect = document.getElementById("operation");
+      const payloadInput = document.getElementById("payload");
+      const output = document.getElementById("output");
+      const badge = document.getElementById("statusBadge");
+      const baseUrlInput = document.getElementById("baseUrl");
+      const bearerInput = document.getElementById("bearer");
+
+      const nowSuffix = () => Date.now().toString().slice(-6);
+
+      const templates = {
+        health: null,
+        registrar_movimentacao: {
+          sku_id: "sku_001",
+          tipo_movimentacao: "entrada",
+          quantidade: 12,
+          endereco_origem: null,
+          endereco_destino: "DEP-A-01",
+          operador: "op_deposito_01",
+          correlation_id: `corr_mov_${nowSuffix()}`,
+          motivo: "Reposicao de deposito de bebidas"
+        },
+        registrar_ajuste: {
+          sku_id: "sku_001",
+          endereco_codigo: "DEP-A-01",
+          quantidade_ajuste: -2,
+          operador: "op_deposito_01",
+          correlation_id: `corr_ajuste_${nowSuffix()}`,
+          motivo: "Quebra na separacao"
+        },
+        registrar_avaria: {
+          sku_id: "sku_001",
+          endereco_codigo: "DEP-A-01",
+          quantidade_avaria: 1,
+          operador: "op_deposito_01",
+          correlation_id: `corr_avaria_${nowSuffix()}`,
+          motivo: "Garrafa danificada"
+        },
+        registrar_recebimento: {
+          nota_fiscal: `NF-BEB-${nowSuffix()}`,
+          fornecedor_id: "forn_bebidas_01",
+          itens: [
+            {
+              sku_codigo: "sku_001",
+              quantidade_esperada: 10,
+              quantidade_conferida: 10,
+              endereco_destino: "DEP-A-01",
+              classificacao_divergencia: null
+            }
+          ],
+          operador: "op_deposito_01",
+          correlation_id: `corr_rec_${nowSuffix()}`
+        },
+        registrar_inventario_ciclico: {
+          operador: "op_deposito_01",
+          correlation_id: `corr_inv_${nowSuffix()}`,
+          motivo: "Contagem semanal de bebidas",
+          itens: [
+            {
+              sku_id: "sku_001",
+              endereco_codigo: "DEP-A-01",
+              quantidade_contada: 8
+            }
+          ]
+        },
+        registrar_politica_kanban: {
+          sku_id: "sku_001",
+          elegivel: true,
+          kanban_ativo: true,
+          faixa_atual: "amarela",
+          faixa_verde_min: 30,
+          faixa_amarela_min: 15,
+          faixa_vermelha_min: 8,
+          operador: "op_deposito_01",
+          correlation_id: `corr_kanban_${nowSuffix()}`,
+          motivo: "Politica do deposito"
+        },
+        processar_curva_abcd: {
+          operador: "op_deposito_01",
+          correlation_id: `corr_abcd_${nowSuffix()}`,
+          itens: [
+            {
+              sku_id: "sku_001",
+              impacto_economico: 1800,
+              variabilidade: 0.25,
+              shelf_life_dias: 120,
+              dias_sem_venda: 5,
+              giro_periodo: 10,
+              lead_time_dias: 2
+            }
+          ]
+        },
+        processar_giro: {
+          operador: "op_deposito_01",
+          correlation_id: `corr_giro_${nowSuffix()}`,
+          itens: [
+            {
+              sku_id: "sku_001",
+              classe_abc: "A",
+              estoque_atual: 100,
+              venda_media_diaria_prevista: 4,
+              total_vendido_periodo: 80,
+              estoque_medio_periodo: 20,
+              ruptura_recorrente: false,
+              lead_time_dias: 2,
+              shelf_life_dias: 120
+            }
+          ]
+        },
+        processar_sazonalidade: {
+          operador: "op_deposito_01",
+          correlation_id: `corr_sazo_${nowSuffix()}`,
+          itens: [
+            {
+              sku_id: "sku_001",
+              fator_sazonal: 1.2,
+              confianca_modelo: 0.9,
+              janela_analise_meses: 24,
+              mudanca_estrutural: false,
+              origem_motor: "stats_engine",
+              versao_modelo: "v1"
+            }
+          ]
+        },
+        simular_orcamento: {
+          operador: "op_deposito_01",
+          correlation_id: `corr_orc_${nowSuffix()}`,
+          periodo_referencia: "2026-02-01",
+          categoria_id: "bebidas",
+          valor_compra_sugerida: 900,
+          orcamento_total_periodo: 2000,
+          orcamento_categoria_periodo: 1200,
+          consumo_atual_total: 800,
+          consumo_atual_categoria: 400,
+          aprovacao_excecao: null,
+          aporte_externo: null
+        }
+      };
+
+      function setBadge(kind, text) {
+        badge.className = `badge ${kind}`;
+        badge.textContent = text;
+      }
+
+      function loadTemplate(op) {
+        const template = templates[op];
+        if (!template) {
+          payloadInput.value = "{}";
+          return;
+        }
+        payloadInput.value = JSON.stringify(template, null, 2);
+      }
+
+      async function loadOperations() {
+        const res = await fetch("/api/operations");
+        const data = await res.json();
+        for (const op of data.operations) {
+          const option = document.createElement("option");
+          option.value = op;
+          option.textContent = op;
+          operationSelect.appendChild(option);
+        }
+        operationSelect.value = "registrar_movimentacao";
+        loadTemplate("registrar_movimentacao");
+      }
+
+      async function run() {
+        const operation = operationSelect.value;
+        let payload = null;
+
+        if (operation !== "health") {
+          try {
+            payload = JSON.parse(payloadInput.value || "{}");
+          } catch (err) {
+            setBadge("err", "json invalido");
+            output.textContent = `JSON invalido: ${err}`;
+            return;
+          }
+        }
+
+        setBadge("pending", "executando");
+        output.textContent = "Executando chamada...";
+
+        const body = {
+          operation,
+          base_url: baseUrlInput.value.trim(),
+          bearer_token: bearerInput.value.trim() || null,
+          payload
+        };
+
+        try {
+          const resp = await fetch("/api/execute", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+          });
+
+          const data = await resp.json();
+          if (resp.ok) {
+            setBadge("ok", "sucesso");
+            output.textContent = JSON.stringify(data, null, 2);
+          } else {
+            setBadge("err", `erro ${resp.status}`);
+            output.textContent = JSON.stringify(data, null, 2);
+          }
+        } catch (err) {
+          setBadge("err", "falha local");
+          output.textContent = `Falha de rede/local: ${err}`;
+        }
+      }
+
+      document.getElementById("btnTemplate").addEventListener("click", () => {
+        loadTemplate(operationSelect.value);
+      });
+
+      operationSelect.addEventListener("change", () => {
+        loadTemplate(operationSelect.value);
+      });
+
+      document.getElementById("btnRun").addEventListener("click", run);
+
+      document.querySelectorAll("button[data-quick]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const op = btn.getAttribute("data-quick");
+          operationSelect.value = op;
+          loadTemplate(op);
+          run();
+        });
+      });
+
+      loadOperations();
+    </script>
+  </body>
+</html>

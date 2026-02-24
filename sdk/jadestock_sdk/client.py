@@ -109,3 +109,12 @@ class JadeStockClient:
                 details=payload_err.get("details"),
                 correlation_id=payload_err.get("correlation_id"),
             ) from exc
+        except urllib.error.URLError as exc:
+            reason = str(getattr(exc, "reason", exc))
+            raise JadeStockSDKError(
+                status_code=503,
+                code="upstream_unreachable",
+                message=f"Nao foi possivel conectar na API Jade-stock em {url}: {reason}",
+                details={"url": url, "reason": reason},
+                correlation_id=None,
+            ) from exc
