@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Guia de Estudos | APIs, IA, Contábil e IAM | Jade-stock</title>
+    <style>
+      :root {
+        --bg-canvas: #f3f3f3;
+        --bg-surface: #ffffff;
+        --bg-surface-2: #fafafa;
+        --fg-1: #1b1a19;
+        --fg-2: #605e5c;
+        --brand: #0f6cbd;
+        --brand-2: #115ea3;
+        --stroke-1: #d0d0d0;
+        --stroke-2: #e7e7e7;
+        --ok: #107c10;
+        --warn: #8a6900;
+        --risk: #a4262c;
+        --radius-1: 10px;
+        --radius-2: 14px;
+        --radius-3: 18px;
+        --shadow-1: 0 2px 8px rgba(0, 0, 0, 0.08);
+        --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.12);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        color: var(--fg-1);
+        font-family: "Segoe UI", "Segoe UI Variable", system-ui, -apple-system, sans-serif;
+        background:
+          radial-gradient(1300px 700px at 0% -10%, #dbeafe 0%, transparent 60%),
+          radial-gradient(1200px 800px at 100% -10%, #dcfce7 0%, transparent 58%),
+          linear-gradient(180deg, #f9f9f9 0%, var(--bg-canvas) 100%);
+        min-height: 100vh;
+      }
+
+      .layout {
+        max-width: 1580px;
+        margin: 0 auto;
+        padding: 20px;
+        display: grid;
+        grid-template-columns: 310px minmax(0, 1fr);
+        gap: 20px;
+      }
+
+      .side {
+        position: sticky;
+        top: 14px;
+        align-self: start;
+        border: 1px solid var(--stroke-2);
+        border-radius: var(--radius-3);
+        background: color-mix(in srgb, var(--bg-surface) 88%, #fff);
+        backdrop-filter: blur(8px);
+        box-shadow: var(--shadow-1);
+        padding: 14px;
+      }
+
+      .side h2 {
+        margin: 0 0 6px;
+        font-size: 18px;
+      }
+
+      .side p {
+        margin: 0 0 12px;
+        color: var(--fg-2);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      .side a {
+        display: block;
+        text-decoration: none;
+        color: var(--brand-2);
+        font-weight: 700;
+        font-size: 14px;
+        border-radius: 10px;
+        padding: 9px 10px;
+      }
+
+      .side a:hover { background: #edf4fb; }
+
+      .main {
+        display: grid;
+        gap: 16px;
+      }
+
+      .hero,
+      .card,
+      .module {
+        border: 1px solid var(--stroke-2);
+        border-radius: var(--radius-3);
+        background: color-mix(in srgb, var(--bg-surface) 92%, #fff);
+        box-shadow: var(--shadow-1);
+      }
+
+      .hero {
+        padding: 24px;
+        box-shadow: var(--shadow-2);
+      }
+
+      .eyebrow {
+        margin: 0;
+        color: var(--brand);
+        font-weight: 800;
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 8px 0 10px;
+        line-height: 1.1;
+        font-size: clamp(28px, 4vw, 44px);
+      }
+
+      h2 {
+        margin: 0 0 10px;
+        font-size: 26px;
+        line-height: 1.2;
+      }
+
+      h3 {
+        margin: 0 0 8px;
+        font-size: 20px;
+      }
+
+      p {
+        margin: 0 0 10px;
+        line-height: 1.6;
+      }
+
+      .chips {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+      }
+
+      .chip {
+        border: 1px solid #bfdbfe;
+        border-radius: 999px;
+        background: #eaf3ff;
+        color: #12395f;
+        font-size: 12px;
+        font-weight: 800;
+        padding: 6px 10px;
+      }
+
+      .grid-4 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 10px;
+      }
+
+      .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 10px;
+      }
+
+      .tile {
+        border: 1px solid var(--stroke-2);
+        border-radius: var(--radius-2);
+        background: var(--bg-surface);
+        padding: 12px;
+      }
+
+      .tile strong {
+        display: block;
+        margin-bottom: 6px;
+        color: var(--brand);
+      }
+
+      .card { padding: 16px; }
+
+      .module {
+        overflow: hidden;
+      }
+
+      .module summary {
+        list-style: none;
+        cursor: pointer;
+        padding: 16px;
+        background: linear-gradient(90deg, #eef5fc 0%, #f7fbff 100%);
+        border-bottom: 1px solid var(--stroke-2);
+      }
+
+      .module summary::-webkit-details-marker { display: none; }
+
+      .module summary h3 {
+        display: inline;
+      }
+
+      .module summary .meta {
+        display: block;
+        margin-top: 6px;
+        color: var(--fg-2);
+        font-size: 14px;
+      }
+
+      .module-body {
+        padding: 16px;
+        display: grid;
+        gap: 12px;
+        background: var(--bg-surface);
+      }
+
+      .split {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .box {
+        border: 1px solid var(--stroke-2);
+        border-radius: var(--radius-2);
+        background: var(--bg-surface-2);
+        padding: 12px;
+      }
+
+      .box h4 {
+        margin: 0 0 8px;
+        font-size: 15px;
+        color: var(--brand);
+      }
+
+      ul,
+      ol {
+        margin: 0;
+        padding-left: 20px;
+        line-height: 1.6;
+      }
+
+      .refs {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
+        gap: 10px;
+      }
+
+      .ref {
+        border: 1px solid var(--stroke-2);
+        border-radius: var(--radius-2);
+        overflow: hidden;
+        background: #fff;
+      }
+
+      .thumb {
+        min-height: 110px;
+        padding: 10px;
+        color: #fff;
+        display: grid;
+        align-content: end;
+        gap: 6px;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+      }
+
+      .thumb .sub {
+        font-size: 12px;
+        font-weight: 700;
+        opacity: 0.92;
+      }
+
+      .thumb.docs {
+        background:
+          linear-gradient(145deg, rgba(255,255,255,0.14), rgba(255,255,255,0)),
+          linear-gradient(120deg, #16a34a 0%, #15803d 52%, #14532d 100%);
+      }
+
+      .thumb.video {
+        background:
+          linear-gradient(145deg, rgba(255,255,255,0.14), rgba(255,255,255,0)),
+          linear-gradient(120deg, #ef4444 0%, #dc2626 52%, #7f1d1d 100%);
+      }
+
+      .thumb.data {
+        background:
+          linear-gradient(145deg, rgba(255,255,255,0.14), rgba(255,255,255,0)),
+          linear-gradient(120deg, #7c3aed 0%, #6d28d9 52%, #3b0764 100%);
+      }
+
+      .thumb.api {
+        background:
+          linear-gradient(145deg, rgba(255,255,255,0.14), rgba(255,255,255,0)),
+          linear-gradient(120deg, #0284c7 0%, #0369a1 52%, #0c4a6e 100%);
+      }
+
+      .ref-body {
+        padding: 12px;
+      }
+
+      .ref-body strong {
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      .ref-body p {
+        margin: 0 0 8px;
+        color: var(--fg-2);
+        font-size: 14px;
+      }
+
+      .ref-body a {
+        color: var(--brand-2);
+        text-decoration: none;
+        font-weight: 700;
+        word-break: break-word;
+      }
+
+      .ref-body a:hover { text-decoration: underline; }
+
+      .badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .ok { background: #e6f6e6; color: var(--ok); }
+      .warn { background: #fff4d6; color: var(--warn); }
+      .risk { background: #fde7e9; color: var(--risk); }
+
+      .legend {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .mini {
+        font-size: 13px;
+        color: var(--fg-2);
+      }
+
+      @media (max-width: 1120px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        .side {
+          position: static;
+        }
+
+        .split {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="side">
+        <h2>Trilha de Estudo</h2>
+        <p>
+          Navegue por módulos. Cada módulo está compacto e recolhível para evitar sensação de lista infinita.
+        </p>
+        <a href="#visao">Visão geral</a>
+        <a href="#trilhas">Trilhas por perfil</a>
+        <a href="#modulos">Módulos de estudo</a>
+        <a href="#plano">Plano em 12 semanas</a>
+        <a href="#dicionario">Dicionário anti-WTF</a>
+        <a href="#metodo">Método TDAH-friendly</a>
+      </aside>
+
+      <main class="main">
+        <section class="hero" id="visao">
+          <p class="eyebrow">Jade-stock Learning Hub</p>
+          <h1>Guia Visual de Estudos: API, IA/Estatística, Contábil e IAM</h1>
+          <p>
+            Você já fechou a base WMS. Este guia é para os próximos blocos de evolução sem perda de contexto.
+            A proposta é: estudar com profundidade, aplicar em mini ciclos e implementar junto com rastreabilidade.
+          </p>
+          <div class="chips">
+            <span class="chip">API pública robusta</span>
+            <span class="chip">Forecast estatístico e neural</span>
+            <span class="chip">Contábil por eventos</span>
+            <span class="chip">OAuth2/OIDC + tenant/licença</span>
+            <span class="chip">Observabilidade + segurança</span>
+          </div>
+        </section>
+
+        <section class="card" id="trilhas">
+          <h2>Trilhas por perfil (para não se perder)</h2>
+          <div class="grid-3">
+            <article class="tile">
+              <strong>Trilha Produto (prioridade 1)</strong>
+              Entender problema, impacto operacional e critérios de decisão antes do código.
+              <div class="mini">Foco: API de negócio, governança de regras, roadmap de valor.</div>
+            </article>
+            <article class="tile">
+              <strong>Trilha Dados/IA (prioridade 2)</strong>
+              Construir base de previsão com método (baseline -> ARIMA -> neural), sem hype.
+              <div class="mini">Foco: forecast auditável e recomendação confiável.</div>
+            </article>
+            <article class="tile">
+              <strong>Trilha Operação (prioridade 3)</strong>
+              Garantir produção estável: segurança, monitoramento, incidentes, release seguro.
+              <div class="mini">Foco: sistema sustentável para cliente real.</div>
+            </article>
+          </div>
+        </section>
+
+        <section class="card" id="modulos">
+          <h2>Módulos de estudo (acordeão)</h2>
+          <p class="mini">
+            Sugestão: abra 1 módulo por vez. Estude, faça resumo em linguagem de produto, só depois implemente.
+          </p>
+
+          <details class="module" open>
+            <summary>
+              <h3>Etapa A — API madura em produção</h3>
+              <span class="meta">Contrato externo estável, semântica HTTP, idempotência e versionamento.</span>
+            </summary>
+            <div class="module-body">
+              <div class="split">
+                <section class="box">
+                  <h4>O que dominar</h4>
+                  <ul>
+                    <li>Semântica HTTP completa (status codes com propósito).</li>
+                    <li>Erros padronizados com `correlation_id`.</li>
+                    <li>Estratégia de idempotência para operações críticas.</li>
+                    <li>Política de depreciação por versão sem quebra abrupta.</li>
+                  </ul>
+                </section>
+                <section class="box">
+                  <h4>Aplicação no Jade-stock</h4>
+                  <ul>
+                    <li>Padrão único de erro/retorno em todos endpoints v1.</li>
+                    <li>SDK alinhado ao OpenAPI publicado.</li>
+                    <li>Paginação e filtro em leituras grandes.</li>
+                    <li>Contrato de integração explícito para parceiros.</li>
+                  </ul>
+                </section>
+              </div>
+              <div class="refs">
+                <article class="ref"><div class="thumb api">HTTP Semantics<div class="sub">RFC oficial</div></div><div class="ref-body"><strong>RFC 9110</strong><p>Base canônica para decisões de API REST.</p><a href="https://www.rfc-editor.org/rfc/rfc9110" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb api">OpenAPI 3.1<div class="sub">Contrato técnico</div></div><div class="ref-body"><strong>OpenAPI Specification</strong><p>Formato de contrato para docs, SDK e validação.</p><a href="https://spec.openapis.org/oas/v3.1.1.html" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb docs">API Guidelines<div class="sub">Padrões de design</div></div><div class="ref-body"><strong>Microsoft API Guidelines</strong><p>Boas práticas de consistência para APIs públicas.</p><a href="https://github.com/microsoft/api-guidelines" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb video">Vídeos PT-BR<div class="sub">FastAPI e API REST</div></div><div class="ref-body"><strong>YouTube PT-BR (busca)</strong><p>Aulas em português para fixar API REST com FastAPI.</p><a href="https://www.youtube.com/results?search_query=fastapi+portugues+api+rest" target="_blank" rel="noopener noreferrer">Abrir vídeos PT-BR</a></div></article>
+              </div>
+            </div>
+          </details>
+
+          <details class="module">
+            <summary>
+              <h3>Etapa B — Postgres, concorrência e consistência</h3>
+              <span class="meta">Trava transacional do core para evitar corrupção de saldo e eventos.</span>
+            </summary>
+            <div class="module-body">
+              <div class="split">
+                <section class="box"><h4>O que dominar</h4><ul><li>Isolation levels e efeito em leitura/escrita.</li><li>Lock e ordem de atualização para evitar deadlock.</li><li>Modelagem JSONB para event store.</li><li>Índices e performance em carga.</li></ul></section>
+                <section class="box"><h4>Aplicação no Jade-stock</h4><ul><li>Atomicidade saldo + movimentação + evento.</li><li>Regras de concorrência em transferência simultânea.</li><li>Consultas de analytics sem travar operacional.</li><li>Matriz de garantias por caso de uso.</li></ul></section>
+              </div>
+              <div class="refs">
+                <article class="ref"><div class="thumb data">Transaction Isolation<div class="sub">PostgreSQL oficial</div></div><div class="ref-body"><strong>Isolation levels</strong><p>Comportamento exato de transações no Postgres.</p><a href="https://www.postgresql.org/docs/current/transaction-iso.html" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb data">JSONB<div class="sub">Schema flexível</div></div><div class="ref-body"><strong>JSON types</strong><p>Uso correto de JSONB no banco.</p><a href="https://www.postgresql.org/docs/current/datatype-json.html" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb data">JSON Functions<div class="sub">Consulta e transformação</div></div><div class="ref-body"><strong>JSON operators/functions</strong><p>Manipulação eficiente de payloads JSON.</p><a href="https://www.postgresql.org/docs/current/functions-json.html" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb video">Vídeos PT-BR<div class="sub">Postgres avançado</div></div><div class="ref-body"><strong>YouTube PT-BR (busca)</strong><p>Aulas em português sobre transações e locking.</p><a href="https://www.youtube.com/results?search_query=postgresql+transacoes+lock+portugues" target="_blank" rel="noopener noreferrer">Abrir vídeos PT-BR</a></div></article>
+              </div>
+            </div>
+          </details>
+
+          <details class="module">
+            <summary>
+              <h3>Etapa C — Arquitetura orientada a eventos</h3>
+              <span class="meta">Fundação para IA e Contábil consumirem o WMS sem acoplamento frágil.</span>
+            </summary>
+            <div class="module-body">
+              <div class="split">
+                <section class="box"><h4>O que dominar</h4><ul><li>Transactional Outbox.</li><li>Idempotent consumer.</li><li>Retry/backoff e DLQ.</li><li>Versionamento de evento.</li></ul></section>
+                <section class="box"><h4>Aplicação no Jade-stock</h4><ul><li>WMS publica fatos imutáveis.</li><li>Contábil consome e lança sem tocar saldo do WMS.</li><li>IA consome histórico para previsão e recomendação.</li><li>Falha não pode quebrar trilha auditável.</li></ul></section>
+              </div>
+              <div class="refs">
+                <article class="ref"><div class="thumb docs">Event Sourcing<div class="sub">Conceito base</div></div><div class="ref-body"><strong>Martin Fowler</strong><p>Panorama de vantagens e tradeoffs.</p><a href="https://martinfowler.com/eaaDev/EventSourcing.html" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb docs">Outbox Pattern<div class="sub">Integridade de publicação</div></div><div class="ref-body"><strong>Transactional Outbox</strong><p>Evita perder evento entre DB e broker.</p><a href="https://microservices.io/patterns/data/transactional-outbox" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb docs">Idempotent Consumer<div class="sub">Entrega duplicada segura</div></div><div class="ref-body"><strong>Idempotência no consumo</strong><p>Protege consistência sob reentrega.</p><a href="https://microservices.io/patterns/communication-style/idempotent-consumer.html" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb video">Vídeos PT-BR<div class="sub">Event-driven</div></div><div class="ref-body"><strong>YouTube PT-BR (busca)</strong><p>Conteúdo em português sobre eventos e mensageria.</p><a href="https://www.youtube.com/results?search_query=arquitetura+orientada+a+eventos+portugues" target="_blank" rel="noopener noreferrer">Abrir vídeos PT-BR</a></div></article>
+              </div>
+            </div>
+          </details>
+
+          <details class="module">
+            <summary>
+              <h3>Etapa D — Estatística aplicada (ARIMA/SARIMA)</h3>
+              <span class="meta">Base obrigatória antes de rede neural: previsão explicável e benchmark honesto.</span>
+            </summary>
+            <div class="module-body">
+              <div class="split">
+                <section class="box"><h4>O que dominar</h4><ul><li>Tendência, sazonalidade e ruído.</li><li>Stationarity e diferenciação.</li><li>ACF/PACF e diagnóstico.</li><li>Métricas: MAE, RMSE, MAPE, WAPE.</li></ul></section>
+                <section class="box"><h4>Aplicação no Jade-stock</h4><ul><li>Baseline por SKU/local/período.</li><li>Comparar baseline ingênuo vs ARIMA.</li><li>Publicar recomendação, não execução.</li><li>Versionar método e janela de treino.</li></ul></section>
+              </div>
+              <div class="refs">
+                <article class="ref"><div class="thumb data">Forecasting Book<div class="sub">FPP3</div></div><div class="ref-body"><strong>Forecasting: Principles and Practice</strong><p>Livro de referência para forecast sério.</p><a href="https://otexts.com/fpp3/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb data">statsmodels ARIMA<div class="sub">Implementação Python</div></div><div class="ref-body"><strong>Documentação ARIMA</strong><p>Parâmetros e uso do modelo ARIMA em Python.</p><a href="https://www.statsmodels.org/stable/generated/statsmodels.tsa.arima.model.ARIMA.html" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb data">StatsForecast<div class="sub">Escala e AutoARIMA</div></div><div class="ref-body"><strong>Nixtla StatsForecast</strong><p>Ferramental para forecast estatístico em escala.</p><a href="https://nixtlaverse.nixtla.io/statsforecast/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb video">Vídeos PT-BR<div class="sub">Séries temporais</div></div><div class="ref-body"><strong>YouTube PT-BR (busca)</strong><p>Conteúdo em português de ARIMA/séries temporais.</p><a href="https://www.youtube.com/results?search_query=arima+s%C3%A9ries+temporais+portugu%C3%AAs" target="_blank" rel="noopener noreferrer">Abrir vídeos PT-BR</a></div></article>
+              </div>
+            </div>
+          </details>
+
+          <details class="module">
+            <summary>
+              <h3>Etapa E — Rede neural para forecast sem hype</h3>
+              <span class="meta">Modelo neural só entra quando superar baseline estatístico com estabilidade.</span>
+            </summary>
+            <div class="module-body">
+              <div class="split">
+                <section class="box"><h4>O que dominar</h4><ul><li>N-BEATS, N-HiTS, TFT (visão de produto).</li><li>Features exógenas e calendários.</li><li>Overfitting, drift, recalibração.</li><li>Previsão probabilística e risco.</li></ul></section>
+                <section class="box"><h4>Aplicação no Jade-stock</h4><ul><li>Comparação objetiva contra ARIMA/baseline.</li><li>Registro de `model_version` e métricas.</li><li>Fallback automático para modelo simples.</li><li>Nenhuma escrita direta no saldo.</li></ul></section>
+              </div>
+              <div class="refs">
+                <article class="ref"><div class="thumb data">NeuralForecast<div class="sub">Nixtla</div></div><div class="ref-body"><strong>NeuralForecast docs</strong><p>Modelos neurais para séries temporais.</p><a href="https://nixtlaverse.nixtla.io/neuralforecast/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb data">PyTorch Forecasting<div class="sub">Toolkit</div></div><div class="ref-body"><strong>PyTorch Forecasting</strong><p>Treino e avaliação de modelos de forecast.</p><a href="https://pytorch-forecasting.readthedocs.io/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb data">GluonTS<div class="sub">Probabilístico</div></div><div class="ref-body"><strong>GluonTS</strong><p>Ecossistema de séries temporais probabilísticas.</p><a href="https://ts.gluon.ai/stable/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb video">Vídeos PT-BR<div class="sub">Redes neurais explicadas</div></div><div class="ref-body"><strong>YouTube PT-BR (busca)</strong><p>Base em português para consolidar fundamentos neurais.</p><a href="https://www.youtube.com/results?search_query=redes+neurais+portugues+introducao" target="_blank" rel="noopener noreferrer">Abrir vídeos PT-BR</a></div></article>
+              </div>
+            </div>
+          </details>
+
+          <details class="module">
+            <summary>
+              <h3>Etapa F — MLOps e governança de modelos</h3>
+              <span class="meta">Rastreabilidade de experimento, produção e rollback sem improviso.</span>
+            </summary>
+            <div class="module-body">
+              <div class="split">
+                <section class="box"><h4>O que dominar</h4><ul><li>Tracking de experimento.</li><li>Versionamento de modelo e dataset.</li><li>Critério de promoção/rollback.</li><li>Auditoria do output da IA.</li></ul></section>
+                <section class="box"><h4>Aplicação no Jade-stock</h4><ul><li>Saída sempre com metadados versionados.</li><li>Checklist de promoção para produção.</li><li>Fallback e proteção operacional.</li><li>Registro por `correlation_id`.</li></ul></section>
+              </div>
+              <div class="refs">
+                <article class="ref"><div class="thumb docs">MLflow<div class="sub">Tracking</div></div><div class="ref-body"><strong>MLflow Tracking</strong><p>Rastrear execuções, parâmetros e métricas.</p><a href="https://www.mlflow.org/docs/latest/ml/tracking" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb docs">DVC<div class="sub">Versionamento de dados</div></div><div class="ref-body"><strong>DVC</strong><p>Controle de dados/modelos com disciplina de engenharia.</p><a href="https://dvc.org/doc/user-guide/what-is-dvc" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb video">Vídeos PT-BR<div class="sub">MLOps</div></div><div class="ref-body"><strong>YouTube PT-BR (busca)</strong><p>Trilha em português para MLOps e deploy de modelos.</p><a href="https://www.youtube.com/results?search_query=mlops+portugues" target="_blank" rel="noopener noreferrer">Abrir vídeos PT-BR</a></div></article>
+              </div>
+            </div>
+          </details>
+
+          <details class="module">
+            <summary>
+              <h3>Etapa G — Contábil orientado a eventos</h3>
+              <span class="meta">Transformar fatos de estoque em lançamentos auditáveis e reconciliáveis.</span>
+            </summary>
+            <div class="module-body">
+              <div class="split">
+                <section class="box"><h4>O que dominar</h4><ul><li>Partidas dobradas e classificação contábil.</li><li>Estoque sob normas (IAS 2 / NBC correlatas).</li><li>Conciliação operacional x contábil.</li><li>Exceção com aprovação rastreável.</li></ul></section>
+                <section class="box"><h4>Aplicação no Jade-stock</h4><ul><li>Tabela de mapeamento `evento_wms -> lançamento`.</li><li>Consumer contábil com retry + DLQ.</li><li>Relatório de divergência e reconciliação.</li><li>Trilha de auditoria ponta a ponta.</li></ul></section>
+              </div>
+              <div class="refs">
+                <article class="ref"><div class="thumb docs">IAS 2<div class="sub">Inventories (IFRS)</div></div><div class="ref-body"><strong>IAS 2</strong><p>Base internacional para tratamento de estoque.</p><a href="https://www.ifrs.org/issued-standards/list-of-standards/ias-2-inventories/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb docs">Normas CFC<div class="sub">Brasil</div></div><div class="ref-body"><strong>CFC - normas completas</strong><p>Normas brasileiras para aderência local.</p><a href="https://portalrestore.cfc.org.br/tecnica/normas-brasileiras-de-contabilidade/normas-completas/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb docs">CPC<div class="sub">Pronunciamentos</div></div><div class="ref-body"><strong>CPC oficial</strong><p>Material normativo de apoio ao desenho contábil.</p><a href="https://www.cpc.org.br/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb video">Vídeos PT-BR<div class="sub">Contabilidade básica</div></div><div class="ref-body"><strong>YouTube PT-BR (busca)</strong><p>Partidas dobradas em português para fixar os fundamentos.</p><a href="https://www.youtube.com/results?search_query=partidas+dobradas+contabilidade+portugues" target="_blank" rel="noopener noreferrer">Abrir vídeos PT-BR</a></div></article>
+              </div>
+            </div>
+          </details>
+
+          <details class="module">
+            <summary>
+              <h3>Etapa H — IAM, OAuth2/OIDC, tenant e licença</h3>
+              <span class="meta">Segurança de acesso e modelo comercial sem acoplar lógica no cliente.</span>
+            </summary>
+            <div class="module-body">
+              <div class="split">
+                <section class="box"><h4>O que dominar</h4><ul><li>AuthN vs AuthZ sem confusão.</li><li>OAuth2, OIDC e PKCE.</li><li>Roles, escopos e permissões por tenant.</li><li>Licença e feature flag por plano.</li></ul></section>
+                <section class="box"><h4>Aplicação no Jade-stock</h4><ul><li>API bloqueia por token/escopo.</li><li>Matriz de acesso por perfil de negócio.</li><li>Controle de módulo por licença ativa.</li><li>Auditoria para ações sensíveis.</li></ul></section>
+              </div>
+              <div class="refs">
+                <article class="ref"><div class="thumb api">OAuth2 RFC 6749<div class="sub">Padrão base</div></div><div class="ref-body"><strong>RFC 6749</strong><p>Especificação do OAuth2.</p><a href="https://datatracker.ietf.org/doc/html/rfc6749" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb api">PKCE RFC 7636<div class="sub">Segurança</div></div><div class="ref-body"><strong>RFC 7636</strong><p>Proteção de fluxo para apps clientes.</p><a href="https://www.rfc-editor.org/rfc/rfc7636" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb api">OIDC Core<div class="sub">Identidade</div></div><div class="ref-body"><strong>OpenID Connect Core</strong><p>Padrão de autenticação de identidade.</p><a href="https://openid.net/specs/openid-connect-core-1_0.html" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb video">Vídeos PT-BR<div class="sub">OAuth2 explicado</div></div><div class="ref-body"><strong>YouTube PT-BR (busca)</strong><p>Explicação em português de OAuth2/OIDC.</p><a href="https://www.youtube.com/results?search_query=oauth2+openid+connect+portugues" target="_blank" rel="noopener noreferrer">Abrir vídeos PT-BR</a></div></article>
+              </div>
+            </div>
+          </details>
+
+          <details class="module">
+            <summary>
+              <h3>Etapa I — Observabilidade e operação contínua</h3>
+              <span class="meta">Saúde do sistema visível em tempo real, com resposta rápida a incidentes.</span>
+            </summary>
+            <div class="module-body">
+              <div class="split">
+                <section class="box"><h4>O que dominar</h4><ul><li>Logs estruturados por `correlation_id`.</li><li>Métricas de latência, erro e throughput.</li><li>Tracing e causalidade de falhas.</li><li>SLO/alertas com runbook.</li></ul></section>
+                <section class="box"><h4>Aplicação no Jade-stock</h4><ul><li>Dashboard mínimo operacional.</li><li>Alertas acionáveis por módulo.</li><li>Playbook por tipo de incidente.</li><li>Medição contínua de disponibilidade.</li></ul></section>
+              </div>
+              <div class="refs">
+                <article class="ref"><div class="thumb docs">OpenTelemetry<div class="sub">Tracing/métricas/logs</div></div><div class="ref-body"><strong>OpenTelemetry Python</strong><p>Instrumentação padrão para backend.</p><a href="https://opentelemetry.io/docs/languages/python/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb docs">Prometheus<div class="sub">Métricas</div></div><div class="ref-body"><strong>Prometheus</strong><p>Monitoramento de séries de métricas.</p><a href="https://prometheus.io/docs/tutorials/getting_started/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb docs">Grafana<div class="sub">Dashboard</div></div><div class="ref-body"><strong>Grafana Dashboards</strong><p>Visualização operacional dos indicadores.</p><a href="https://grafana.com/docs/grafana/latest/dashboards/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb video">Vídeos PT-BR<div class="sub">Observabilidade</div></div><div class="ref-body"><strong>YouTube PT-BR (busca)</strong><p>Conteúdo em português para observabilidade prática.</p><a href="https://www.youtube.com/results?search_query=observabilidade+prometheus+grafana+portugues" target="_blank" rel="noopener noreferrer">Abrir vídeos PT-BR</a></div></article>
+              </div>
+            </div>
+          </details>
+        </section>
+
+        <section class="card" id="plano">
+          <h2>Plano de 12 semanas (execução incremental)</h2>
+          <div class="grid-4">
+            <article class="tile"><strong>Semanas 1-3</strong><span class="badge ok">Base</span><br />API madura + Postgres + event-driven.</article>
+            <article class="tile"><strong>Semanas 4-7</strong><span class="badge ok">Dados</span><br />ARIMA/SARIMA + neural forecast + MLOps.</article>
+            <article class="tile"><strong>Semanas 8-10</strong><span class="badge warn">Financeiro</span><br />Contábil por eventos + reconciliação.</article>
+            <article class="tile"><strong>Semanas 11-12</strong><span class="badge warn">Produção</span><br />IAM + observabilidade + hardening.</article>
+          </div>
+        </section>
+
+        <section class="card" id="dicionario">
+          <h2>Dicionário anti-WTF</h2>
+          <div class="grid-4">
+            <article class="tile"><strong>ARIMA/SARIMA</strong>Modelos estatísticos para previsão temporal.</article>
+            <article class="tile"><strong>Outbox</strong>Padrão para publicar evento com consistência transacional.</article>
+            <article class="tile"><strong>Idempotência</strong>Repetição segura sem duplicar efeito.</article>
+            <article class="tile"><strong>DLQ</strong>Destino de mensagens que falharam após retries.</article>
+            <article class="tile"><strong>MLOps</strong>Operação de modelos com governança em produção.</article>
+            <article class="tile"><strong>Tenant</strong>Isolamento lógico por cliente.</article>
+            <article class="tile"><strong>OIDC</strong>Camada de identidade sobre OAuth2.</article>
+            <article class="tile"><strong>SLO</strong>Meta técnica que representa saúde do serviço.</article>
+          </div>
+        </section>
+
+        <section class="card" id="metodo">
+          <h2>Método de estudo (TDAH-friendly)</h2>
+          <div class="split">
+            <section class="box">
+              <h4>Regra 60/30/10</h4>
+              <ul>
+                <li>60%: problema de negócio e decisão.</li>
+                <li>30%: padrão de arquitetura.</li>
+                <li>10%: detalhe de implementação.</li>
+              </ul>
+            </section>
+            <section class="box">
+              <h4>Ciclo semanal</h4>
+              <ol>
+                <li>Escolha 1 módulo do acordeão.</li>
+                <li>Consuma 2-4 referências.</li>
+                <li>Escreva resumo em linguagem de produto.</li>
+                <li>Faça 1 experimento no Jade-stock.</li>
+              </ol>
+            </section>
+          </div>
+          <p class="mini">
+            Nota de design: esta página usa princípios do Fluent 2 (tokens, hierarquia de superfície, legibilidade, contraste e estrutura por blocos).
+            Referências: <a href="https://fluent2.microsoft.design/" target="_blank" rel="noopener noreferrer">Fluent 2</a>,
+            <a href="https://fluent2.microsoft.design/design-tokens" target="_blank" rel="noopener noreferrer">Design Tokens</a>,
+            <a href="https://fluent2.microsoft.design/typography" target="_blank" rel="noopener noreferrer">Typography</a>.
+          </p>
+          <div class="legend">
+            <span class="badge ok">Conteúdo operacional</span>
+            <span class="badge warn">Conteúdo estratégico</span>
+            <span class="badge risk">Risco de produção se ignorar</span>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
