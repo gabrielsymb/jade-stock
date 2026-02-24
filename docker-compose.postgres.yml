@@ -1,0 +1,23 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: wms-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${WMS_POSTGRES_USER:-wms}
+      POSTGRES_PASSWORD: ${WMS_POSTGRES_PASSWORD:-wms}
+      POSTGRES_DB: ${WMS_POSTGRES_DB:-wms}
+    ports:
+      - "${WMS_POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${WMS_POSTGRES_USER:-wms}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - wms_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  wms_postgres_data:

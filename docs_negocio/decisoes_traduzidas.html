@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Decisões Técnicas Traduzidas | WMS</title>
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <main class="content" style="max-width: 1120px; margin: 20px auto; padding: 0 12px;">
+      <section class="surface">
+        <p class="eyebrow">Tecnologia em Linguagem de Negócio</p>
+        <h2>Decisões Técnicas Traduzidas</h2>
+        <p>
+          Esta página explica por que certas decisões foram tomadas no sistema,
+          sem exigir conhecimento de programação.
+        </p>
+      </section>
+
+      <section class="surface">
+        <h3>1) FastAPI e Uvicorn</h3>
+        <ul class="plain-list">
+          <li><strong>FastAPI:</strong> ferramenta para criar os endpoints do sistema.</li>
+          <li><strong>Uvicorn:</strong> processo que mantém a API funcionando em uma porta.</li>
+          <li><strong>Benefício de negócio:</strong> integração com PDV e outros sistemas sem acesso direto ao banco.</li>
+          <li><strong>Arquivo:</strong> <a href="../wms/interfaces/api/app.py"><code>wms/interfaces/api/app.py</code></a></li>
+        </ul>
+      </section>
+
+      <section class="surface">
+        <h3>2) Validação antes de gravar</h3>
+        <pre class="flow-diagram">Recebe pedido -> valida regra de negócio -> só então grava</pre>
+        <ul class="plain-list">
+          <li>Exemplo: não movimenta sem saldo suficiente.</li>
+          <li>Exemplo: não ajusta sem motivo.</li>
+          <li><strong>Benefício:</strong> reduz erro operacional e financeiro.</li>
+          <li><strong>Arquivos:</strong> 
+            <a href="../wms/application/use_cases/registrar_movimentacao_estoque.py"><code>registrar_movimentacao_estoque.py</code></a>,
+            <a href="../wms/application/use_cases/registrar_ajuste_estoque.py"><code>registrar_ajuste_estoque.py</code></a>
+          </li>
+        </ul>
+      </section>
+
+      <section class="surface">
+        <h3>3) Idempotência (evitar duplicidade)</h3>
+        <pre class="flow-diagram">Mesmo pedido repetido -> sistema não deve duplicar efeito</pre>
+        <ul class="plain-list">
+          <li>No recebimento, já existe proteção por <code>nota_fiscal + correlation_id</code>.</li>
+          <li><strong>Benefício:</strong> evita processar duas vezes a mesma entrada.</li>
+          <li><strong>Arquivo:</strong> <a href="../wms/application/use_cases/registrar_recebimento.py"><code>registrar_recebimento.py</code></a></li>
+          <li><strong>Tabela:</strong> <a href="../../Database/schema_core.sql"><code>recebimento</code> (unique de nota+corr)</a></li>
+        </ul>
+      </section>
+
+      <section class="surface">
+        <h3>4) Transação e rollback</h3>
+        <pre class="flow-diagram">Atualiza saldo + grava histórico + grava evento -> se falhar algo, desfaz tudo</pre>
+        <ul class="plain-list">
+          <li><strong>Benefício:</strong> não deixa o sistema “meio certo, meio errado”.</li>
+          <li><strong>Arquivo:</strong> <a href="../wms/infrastructure/database/postgres_transaction_manager.py"><code>postgres_transaction_manager.py</code></a></li>
+          <li><strong>Teste:</strong> <a href="../tests/test_postgres_transactional_behavior.py"><code>test_postgres_transactional_behavior.py</code></a></li>
+        </ul>
+      </section>
+
+      <section class="surface">
+        <h3>5) Concorrência (duas operações ao mesmo tempo)</h3>
+        <pre class="flow-diagram">Duas requisições simultâneas -> sistema protege saldo para não corromper</pre>
+        <ul class="plain-list">
+          <li><strong>Benefício:</strong> evita erro de saldo em operação real com múltiplos operadores.</li>
+          <li><strong>Arquivo:</strong> <a href="../wms/infrastructure/postgres/postgres_estoque_repository.py"><code>postgres_estoque_repository.py</code></a></li>
+          <li><strong>Teste:</strong> <a href="../tests/test_postgres_transactional_behavior.py"><code>test_postgres_transactional_behavior.py</code></a></li>
+        </ul>
+      </section>
+
+      <section class="surface">
+        <h3>6) Camadas do sistema</h3>
+        <pre class="flow-diagram">Regra de negócio (o que pode) -> Caso de uso (como executar) -> Infraestrutura (onde grava)</pre>
+        <ul class="plain-list">
+          <li><strong>Benefício:</strong> mudar tecnologia sem quebrar regra do negócio.</li>
+          <li><strong>Pastas:</strong> <code>wms/domain</code>, <code>wms/application</code>, <code>wms/infrastructure</code></li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
