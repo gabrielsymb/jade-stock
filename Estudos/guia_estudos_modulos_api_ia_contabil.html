@@ -194,10 +194,30 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
+      text-decoration: none;
+      color: inherit;
+      transition: transform .18s, box-shadow .18s;
+      cursor: pointer;
     }
+    .trilha:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
     .trilha.t1 { background: var(--base-lt); border: 1px solid #bfdbfe; }
     .trilha.t2 { background: var(--dados-lt); border: 1px solid #ddd6fe; }
     .trilha.t3 { background: var(--prod-lt); border: 1px solid #a7f3d0; }
+    .trilha-arrow {
+      margin-top: auto;
+      padding-top: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      opacity: .7;
+      transition: opacity .15s;
+    }
+    .trilha:hover .trilha-arrow { opacity: 1; }
+    .t1 .trilha-arrow { color: var(--base); }
+    .t2 .trilha-arrow { color: var(--dados); }
+    .t3 .trilha-arrow { color: var(--prod); }
     .trilha-badge {
       display: inline-block;
       font-size: 11px;
@@ -246,16 +266,36 @@
       color: var(--ink-2);
       line-height: 1.45;
       display: flex;
+      flex-direction: column;
+      gap: 0;
+      cursor: pointer;
+      transition: background .15s, border-color .15s, box-shadow .15s;
+      position: relative;
+    }
+    .mapa-item:hover { background: #fff; border-color: var(--border-2); box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    .mapa-item-label {
+      display: flex;
       align-items: flex-start;
       gap: 8px;
     }
-    .mapa-item::before {
+    .mapa-item-label::before {
       content: "→";
       color: var(--jade-mid);
       font-weight: 700;
       flex-shrink: 0;
-      margin-top: 1px;
+      transition: transform .15s;
     }
+    .mapa-item.open .mapa-item-label::before { content: "↓"; }
+    .mapa-desc {
+      display: none;
+      font-size: 13px;
+      color: var(--ink-3);
+      line-height: 1.6;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+    .mapa-item.open .mapa-desc { display: block; }
 
     /* ── PLANO 12 SEMANAS ────────────────────────── */
     .plano-grid {
@@ -701,24 +741,27 @@
         <span class="sub">escolha uma antes de começar o dia</span>
       </div>
       <div class="trilha-grid">
-        <article class="trilha t1">
+        <a class="trilha t1" href="#etapa-a">
           <span class="trilha-badge">Prioridade 1 — Produto</span>
           <strong>API de negócio e governança</strong>
           <p>Entender o problema, o impacto operacional e os critérios de decisão <em>antes</em> de tocar no código. O Jade-stock precisa de contratos estáveis antes de escalar.</p>
           <span class="focus">Etapas A, B e C</span>
-        </article>
-        <article class="trilha t2">
+          <span class="trilha-arrow">Ir para os módulos →</span>
+        </a>
+        <a class="trilha t2" href="#etapa-d">
           <span class="trilha-badge">Prioridade 2 — Dados / IA</span>
           <strong>Forecast auditável e recomendação confiável</strong>
           <p>Construir a base de previsão com método honesto: baseline simples → ARIMA → neural. Sem hype, sem pular etapas. Modelo que não bate baseline não vai para produção.</p>
           <span class="focus">Etapas D, E e F</span>
-        </article>
-        <article class="trilha t3">
+          <span class="trilha-arrow">Ir para os módulos →</span>
+        </a>
+        <a class="trilha t3" href="#etapa-g">
           <span class="trilha-badge">Prioridade 3 — Operação</span>
           <strong>Sistema sustentável para cliente real</strong>
           <p>Segurança de acesso, monitoramento e resposta rápida a incidentes. O sistema só é real quando alguém além de você usa em produção sem travar.</p>
-          <span class="focus">Etapas G–J</span>
-        </article>
+          <span class="focus">Etapas G, H e I</span>
+          <span class="trilha-arrow">Ir para os módulos →</span>
+        </a>
       </div>
     </section>
 
@@ -731,33 +774,33 @@
       <div class="mapa-grid">
         <div class="mapa-col">
           <div class="mapa-col-title c">📒 Contábil</div>
-          <div class="mapa-item">Partidas dobradas e natureza das contas</div>
-          <div class="mapa-item">Plano de contas e lançamentos</div>
-          <div class="mapa-item">DRE, Balanço Patrimonial, DFC</div>
-          <div class="mapa-item">Auditoria e controles internos</div>
-          <div class="mapa-item">Contabilidade de custos e margem</div>
-          <div class="mapa-item">Tributário aplicado por operação</div>
-          <div class="mapa-item">Fechamento mensal e reconciliação</div>
+          <div class="mapa-item" onclick="this.classList.toggle('open')"><div class="mapa-item-label">Partidas dobradas e natureza das contas</div><div class="mapa-desc">Todo lançamento contábil tem dois lados de igual valor: débito e crédito. A natureza da conta define qual lado aumenta o saldo — ativo aumenta com débito, passivo e receita aumentam com crédito.</div></div>
+          <div class="mapa-item" onclick="this.classList.toggle('open')"><div class="mapa-item-label">Plano de contas e lançamentos</div><div class="mapa-desc">O plano de contas é a lista numerada de todas as contas que o negócio usa (ex: 1.1.1 Caixa, 2.1.1 Fornecedores). Um lançamento registra uma operação informando quais contas foram debitadas e creditadas.</div></div>
+          <div class="mapa-item" onclick="this.classList.toggle('open')"><div class="mapa-item-label">DRE, Balanço Patrimonial, DFC</div><div class="mapa-desc">A DRE mostra se o negócio lucrou em um período. O Balanço mostra o que ele tem (ativos) e o que deve (passivos) em uma data. A DFC mostra quanto dinheiro entrou e saiu — diferente do lucro, que inclui vendas ainda não recebidas.</div></div>
+          <div class="mapa-item" onclick="this.classList.toggle('open')"><div class="mapa-item-label">Auditoria e controles internos</div><div class="mapa-desc">Auditoria é verificar se os lançamentos são verdadeiros e corretos. Controles internos são regras que previnem erros antes que aconteçam — como exigir aprovação dupla em ajustes de estoque acima de certo valor.</div></div>
+          <div class="mapa-item" onclick="this.classList.toggle('open')"><div class="mapa-item-label">Contabilidade de custos e margem</div><div class="mapa-desc">Custo de um produto inclui compra, frete, seguro e perdas — não só o preço de compra. Margem bruta é Receita menos CMV (custo das mercadorias vendidas). Margem de contribuição desconta também os custos variáveis.</div></div>
+          <div class="mapa-item" onclick="this.classList.toggle('open')"><div class="mapa-item-label">Tributário aplicado por operação</div><div class="mapa-desc">Cada operação de estoque pode gerar obrigações fiscais diferentes: entrada gera crédito de ICMS, saída gera débito de ICMS + PIS/COFINS. O regime tributário da empresa (Simples, Lucro Presumido, Real) muda os cálculos.</div></div>
+          <div class="mapa-item" onclick="this.classList.toggle('open')"><div class="mapa-item-label">Fechamento mensal e reconciliação</div><div class="mapa-desc">Fechamento é "encerrar os livros" do mês: verificar que todos os lançamentos estão corretos e gerar as demonstrações. Reconciliação é cruzar o saldo do sistema com o físico e explicar qualquer diferença encontrada.</div></div>
         </div>
         <div class="mapa-col">
           <div class="mapa-col-title e">📊 Estatística e IA</div>
-          <div class="mapa-item">Tendência, sazonalidade e ruído</div>
-          <div class="mapa-item">Stationarity, ACF/PACF e ARIMA/SARIMA</div>
-          <div class="mapa-item">Métricas: MAE, RMSE, MAPE, WAPE</div>
-          <div class="mapa-item">Janela temporal, horizonte e lookback</div>
-          <div class="mapa-item">Features exógenas (feriados, clima, eventos)</div>
-          <div class="mapa-item">Overfitting, drift e recalibração</div>
-          <div class="mapa-item">MLOps: versionamento e rollback de modelos</div>
+          <div class="mapa-item" onclick="this.classList.toggle('open')"><div class="mapa-item-label">Tendência, sazonalidade e ruído</div><div class="mapa-desc">Tendência é a direção geral da série (subindo, descendo). Sazonalidade é um padrão que se repete em ciclos fixos (mais vendas em dezembro). Ruído é variação aleatória sem padrão — nenhum modelo consegue prever perfeitamente.</div></div>
+          <div class="mapa-item" onclick="this.classList.toggle('open')"><div class="mapa-item-label">Stationarity, ACF/PACF e ARIMA/SARIMA</div><div class="mapa-desc">Série estacionária é aquela sem tendência ou sazonalidade — exigida pelo ARIMA. ACF e PACF são gráficos que revelam os parâmetros p e q do modelo. SARIMA adiciona componente sazonal ao ARIMA.</div></div>
+          <div class="mapa-item" onclick="this.classList.toggle('open')"><div class="mapa-item-label">Métricas: MAE, RMSE, MAPE, WAPE</div><div class="mapa-desc">MAE é o erro médio absoluto. RMSE penaliza erros grandes. MAPE é o erro em percentual — fácil de explicar ao cliente. WAPE é o MAPE ponderado por volume, mais justo quando SKUs têm volumes muito diferentes.</div></div>
+          <div class="mapa-item" onclick="this.classList.toggle('open')"><div class="mapa-item-label">Janela temporal, horizonte e lookback</div><div class="mapa-desc">Lookback (janela temporal) é quantos períodos passados o modelo usa para prever. Horizonte é quantos períodos à frente ele prevê. Uma janela de 12 meses e horizonte de 4 semanas são escolhas típicas para reposição de estoque.</div></div>
+          <div class="mapa-item" onclick="this.classList.toggle('open')"><div class="mapa-item-label">Features exógenas (feriados, clima, eventos)</div><div class="mapa-desc">Variáveis externas que influenciam a demanda e não estão na própria série histórica. O modelo aprende que vendas caem na semana do carnaval ou sobem em Black Friday. Sem elas, o modelo acha que são variações aleatórias.</div></div>
+          <div class="mapa-item" onclick="this.classList.toggle('open')"><div class="mapa-item-label">Overfitting, drift e recalibração</div><div class="mapa-desc">Overfitting: modelo que decorou o treino mas erra no mundo real. Drift: o padrão do mundo muda e o modelo envelhece. Recalibração: retreinar o modelo periodicamente com dados recentes para manter a precisão.</div></div>
+          <div class="mapa-item" onclick="this.classList.toggle('open')"><div class="mapa-item-label">MLOps: versionamento e rollback de modelos</div><div class="mapa-desc">MLOps é o Git para modelos de ML: rastreia qual versão rodou em produção, com quais dados foi treinada e quais métricas tinha. Rollback é voltar para a versão anterior quando o modelo atual começa a errar mais.</div></div>
         </div>
         <div class="mapa-col">
           <div class="mapa-col-title i">🔐 API e Operação</div>
-          <div class="mapa-item">Semântica HTTP e status codes com propósito</div>
-          <div class="mapa-item">Idempotência, versionamento e deprecação</div>
-          <div class="mapa-item">Transactional Outbox e DLQ</div>
-          <div class="mapa-item">OAuth2, OIDC e PKCE</div>
-          <div class="mapa-item">Roles, escopos e permissões por tenant</div>
-          <div class="mapa-item">Logs estruturados e tracing por correlation_id</div>
-          <div class="mapa-item">SLOs, alertas e runbooks</div>
+          <div class="mapa-item" onclick="this.classList.toggle('open')"><div class="mapa-item-label">Semântica HTTP e status codes com propósito</div><div class="mapa-desc">200 OK, 201 Created, 400 Bad Request, 409 Conflict, 422 Unprocessable, 503 Unavailable — cada código tem um significado específico. Usar o código errado confunde o cliente da API e dificulta o diagnóstico de erros.</div></div>
+          <div class="mapa-item" onclick="this.classList.toggle('open')"><div class="mapa-item-label">Idempotência, versionamento e deprecação</div><div class="mapa-desc">Idempotência: chamar o mesmo endpoint duas vezes produz o mesmo resultado que chamar uma vez. Versionamento: /v1/ e /v2/ coexistem durante a transição. Deprecação: avisar com antecedência antes de remover um endpoint.</div></div>
+          <div class="mapa-item" onclick="this.classList.toggle('open')"><div class="mapa-item-label">Transactional Outbox e DLQ</div><div class="mapa-desc">Outbox: salvar o evento no banco junto com o dado na mesma transação — garantindo que nunca se perca na publicação. DLQ (Dead-Letter Queue): fila de destino para eventos que falharam muitas vezes, sem descarte silencioso.</div></div>
+          <div class="mapa-item" onclick="this.classList.toggle('open')"><div class="mapa-item-label">OAuth2, OIDC e PKCE</div><div class="mapa-desc">OAuth2 é o protocolo de autorização ("o que você pode fazer"). OIDC adiciona identidade ("quem você é") — é o que o botão "Entrar com Google" usa. PKCE é uma extensão de segurança obrigatória para apps mobile e desktop.</div></div>
+          <div class="mapa-item" onclick="this.classList.toggle('open')"><div class="mapa-item-label">Roles, escopos e permissões por tenant</div><div class="mapa-desc">Role é um perfil de acesso (operador, gerente, contador). Scope é uma permissão específica (wms:write, contabil:read). Tenant é o isolamento de dados por cliente — o operador da Empresa A nunca vê dados da Empresa B.</div></div>
+          <div class="mapa-item" onclick="this.classList.toggle('open')"><div class="mapa-item-label">Logs estruturados e tracing por correlation_id</div><div class="mapa-desc">Log estruturado é JSON com campos fixos (level, timestamp, correlation_id, tenant_id) — não texto livre. Tracing com correlation_id permite rastrear uma operação que passou por WMS → Event Store → Contábil em segundos.</div></div>
+          <div class="mapa-item" onclick="this.classList.toggle('open')"><div class="mapa-item-label">SLOs, alertas e runbooks</div><div class="mapa-desc">SLO (Service Level Objective) é a meta de qualidade: "99.5% das requisições em menos de 500ms". Alerta acionável diz o que fazer, não só que algo está errado. Runbook é o passo a passo de como resolver cada tipo de incidente.</div></div>
         </div>
       </div>
     </section>
@@ -781,7 +824,7 @@
       <div class="modules-list">
 
         <!-- ETAPA A -->
-        <details class="module">
+        <details class="module" id="etapa-a">
           <summary>
             <div class="module-num num-base">A</div>
             <div class="module-summary-text">
@@ -1012,7 +1055,7 @@
         </details>
 
         <!-- ETAPA D -->
-        <details class="module">
+        <details class="module" id="etapa-d">
           <summary>
             <div class="module-num num-dados">D</div>
             <div class="module-summary-text">
@@ -1248,7 +1291,7 @@
         </details>
 
         <!-- ETAPA G — CONTÁBIL (sub-módulos) -->
-        <details class="module">
+        <details class="module" id="etapa-g">
           <summary>
             <div class="module-num num-fin">G</div>
             <div class="module-summary-text">
