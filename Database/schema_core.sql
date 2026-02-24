@@ -144,16 +144,24 @@ CREATE INDEX IF NOT EXISTS ix_recebimento_item_sku ON recebimento_item (sku_id);
 CREATE TABLE IF NOT EXISTS event_store (
     event_id                  TEXT PRIMARY KEY,
     event_name                TEXT NOT NULL,
+    event_type                TEXT NOT NULL,
+    bounded_context           TEXT NOT NULL DEFAULT 'wms',
+    aggregate_type            TEXT,
+    aggregate_id              TEXT,
     occurred_at               TIMESTAMPTZ NOT NULL,
     actor_id                  TEXT,
     tenant_id                 TEXT,
     correlation_id            TEXT NOT NULL,
+    causation_id              TEXT,
     schema_version            TEXT NOT NULL,
     payload                   JSONB NOT NULL,
     created_at                TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS ix_event_store_name_time ON event_store (event_name, occurred_at DESC);
+CREATE INDEX IF NOT EXISTS ix_event_store_type_time ON event_store (event_type, occurred_at DESC);
+CREATE INDEX IF NOT EXISTS ix_event_store_context_time ON event_store (bounded_context, occurred_at DESC);
+CREATE INDEX IF NOT EXISTS ix_event_store_aggregate_time ON event_store (aggregate_type, aggregate_id, occurred_at DESC);
 CREATE INDEX IF NOT EXISTS ix_event_store_corr ON event_store (correlation_id);
 
 -- =====================================
