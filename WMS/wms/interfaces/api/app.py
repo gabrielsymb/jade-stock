@@ -120,6 +120,27 @@ TENANT_ID = os.getenv("WMS_API_TENANT_ID", "loja_demo")
 
 app = FastAPI(title="WMS API", version="0.1.0")
 
+IDEMPOTENCY_NOTE = (
+    " Idempotencia: para retry, reutilize o mesmo `correlation_id` com o mesmo payload. "
+    "Se enviar o mesmo `correlation_id` com payload diferente, a API retorna `409 Conflict`."
+)
+
+IDEMPOTENCY_RESPONSES = {
+    409: {
+        "description": "Conflito de idempotencia (mesmo correlation_id com payload diferente).",
+        "content": {
+            "application/json": {
+                "example": {
+                    "code": "idempotency_payload_conflict",
+                    "message": "idempotency payload conflict",
+                    "details": None,
+                    "correlation_id": "corr_exemplo_001",
+                }
+            }
+        },
+    }
+}
+
 
 class ErrorResponse(BaseModel):
     code: str = Field(description="Codigo padrao de erro da API.")
@@ -729,7 +750,11 @@ def favicon() -> Response:
 @app.post(
     "/v1/movimentacoes",
     summary="Registrar movimentacao de estoque",
-    description="Registra entrada, saida, transferencia, ajuste ou avaria com validacoes de negocio e idempotencia.",
+    description=(
+        "Registra entrada, saida, transferencia, ajuste ou avaria com validacoes de negocio."
+        + IDEMPOTENCY_NOTE
+    ),
+    responses=IDEMPOTENCY_RESPONSES,
 )
 def registrar_movimentacao(body: MovimentacaoRequest) -> dict:
     data = RegistrarMovimentacaoEstoqueInput(**body.model_dump())
@@ -767,7 +792,11 @@ def registrar_movimentacao(body: MovimentacaoRequest) -> dict:
 @app.post(
     "/v1/ajustes",
     summary="Registrar ajuste de estoque",
-    description="Aplica ajuste positivo ou negativo no saldo, com motivo obrigatorio e trilha de auditoria.",
+    description=(
+        "Aplica ajuste positivo ou negativo no saldo, com motivo obrigatorio e trilha de auditoria."
+        + IDEMPOTENCY_NOTE
+    ),
+    responses=IDEMPOTENCY_RESPONSES,
 )
 def registrar_ajuste(body: AjusteRequest) -> dict:
     data = RegistrarAjusteEstoqueInput(**body.model_dump())
@@ -805,7 +834,11 @@ def registrar_ajuste(body: AjusteRequest) -> dict:
 @app.post(
     "/v1/avarias",
     summary="Registrar avaria de estoque",
-    description="Registra perda operacional por avaria com validacoes de saldo e motivo obrigatorio.",
+    description=(
+        "Registra perda operacional por avaria com validacoes de saldo e motivo obrigatorio."
+        + IDEMPOTENCY_NOTE
+    ),
+    responses=IDEMPOTENCY_RESPONSES,
 )
 def registrar_avaria(body: AvariaRequest) -> dict:
     data = RegistrarAvariaEstoqueInput(**body.model_dump())
@@ -843,7 +876,11 @@ def registrar_avaria(body: AvariaRequest) -> dict:
 @app.post(
     "/v1/recebimentos",
     summary="Registrar recebimento com conferencia",
-    description="Registra nota fiscal, conferencia por item e trata divergencias de recebimento.",
+    description=(
+        "Registra nota fiscal, conferencia por item e trata divergencias de recebimento."
+        + IDEMPOTENCY_NOTE
+    ),
+    responses=IDEMPOTENCY_RESPONSES,
 )
 def registrar_recebimento(body: RecebimentoRequest) -> dict:
     itens = [ItemRecebimentoInput(**item.model_dump()) for item in body.itens]
@@ -891,7 +928,9 @@ def registrar_recebimento(body: RecebimentoRequest) -> dict:
     description=(
         "Registra contagem fisica por SKU/endereco, compara com saldo sistemico e "
         "gera ajustes automaticos quando houver divergencia."
+        + IDEMPOTENCY_NOTE
     ),
+    responses=IDEMPOTENCY_RESPONSES,
 )
 def registrar_inventario_ciclico(body: InventarioCiclicoRequest) -> dict:
     itens = [ItemContagemCiclicaInput(**item.model_dump()) for item in body.itens]
@@ -942,7 +981,11 @@ def registrar_inventario_ciclico(body: InventarioCiclicoRequest) -> dict:
 @app.post(
     "/v1/kanban/politicas",
     summary="Registrar politica Kanban",
-    description="Cria ou atualiza politica Kanban por SKU, com faixas e eventos de reposicao.",
+    description=(
+        "Cria ou atualiza politica Kanban por SKU, com faixas e eventos de reposicao."
+        + IDEMPOTENCY_NOTE
+    ),
+    responses=IDEMPOTENCY_RESPONSES,
 )
 def registrar_politica_kanban(body: KanbanPoliticaRequest) -> dict:
     data = RegistrarPoliticaKanbanInput(**body.model_dump())
@@ -980,7 +1023,11 @@ def registrar_politica_kanban(body: KanbanPoliticaRequest) -> dict:
 @app.post(
     "/v1/curva-abcd/processar",
     summary="Processar curva ABCD",
-    description="Classifica itens em A/B/C/D e atualiza politica operacional de cobertura/reposicao.",
+    description=(
+        "Classifica itens em A/B/C/D e atualiza politica operacional de cobertura/reposicao."
+        + IDEMPOTENCY_NOTE
+    ),
+    responses=IDEMPOTENCY_RESPONSES,
 )
 def processar_curva_abcd(body: CurvaABCDProcessarRequest) -> dict:
     itens = [ItemCurvaABCDInput(**item.model_dump()) for item in body.itens]
@@ -1023,7 +1070,11 @@ def processar_curva_abcd(body: CurvaABCDProcessarRequest) -> dict:
 @app.post(
     "/v1/giro/processar",
     summary="Processar giro de estoque",
-    description="Calcula giro e cobertura por item, emitindo alertas operacionais e atualizando politica.",
+    description=(
+        "Calcula giro e cobertura por item, emitindo alertas operacionais e atualizando politica."
+        + IDEMPOTENCY_NOTE
+    ),
+    responses=IDEMPOTENCY_RESPONSES,
 )
 def processar_giro_estoque(body: GiroEstoqueProcessarRequest) -> dict:
     itens = [ItemGiroEstoqueInput(**item.model_dump()) for item in body.itens]
@@ -1066,7 +1117,11 @@ def processar_giro_estoque(body: GiroEstoqueProcessarRequest) -> dict:
 @app.post(
     "/v1/sazonalidade/processar",
     summary="Processar sazonalidade operacional",
-    description="Aplica sinal sazonal externo de forma deterministica e auditavel na politica de estoque.",
+    description=(
+        "Aplica sinal sazonal externo de forma deterministica e auditavel na politica de estoque."
+        + IDEMPOTENCY_NOTE
+    ),
+    responses=IDEMPOTENCY_RESPONSES,
 )
 def processar_sazonalidade(body: SazonalidadeProcessarRequest) -> dict:
     itens = [ItemSazonalidadeInput(**item.model_dump()) for item in body.itens]
@@ -1116,7 +1171,11 @@ def processar_sazonalidade(body: SazonalidadeProcessarRequest) -> dict:
 @app.post(
     "/v1/orcamento/simular",
     summary="Simular governanca orcamentaria",
-    description="Valida compra sugerida contra limites de orcamento total/categoria e registra excecoes.",
+    description=(
+        "Valida compra sugerida contra limites de orcamento total/categoria e registra excecoes."
+        + IDEMPOTENCY_NOTE
+    ),
+    responses=IDEMPOTENCY_RESPONSES,
 )
 def processar_governanca_orcamentaria(body: OrcamentoSimulacaoRequest) -> dict:
     aporte = None
