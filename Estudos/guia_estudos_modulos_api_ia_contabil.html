@@ -360,6 +360,7 @@
         </p>
         <a href="#visao">Visão geral</a>
         <a href="#trilhas">Trilhas por perfil</a>
+        <a href="#curriculo">Grade curricular aplicada</a>
         <a href="#modulos">Módulos de estudo</a>
         <a href="#plano">Plano em 12 semanas</a>
         <a href="#dicionario">Dicionário anti-WTF</a>
@@ -401,6 +402,53 @@
               Garantir produção estável: segurança, monitoramento, incidentes, release seguro.
               <div class="mini">Foco: sistema sustentável para cliente real.</div>
             </article>
+          </div>
+        </section>
+
+        <section class="card" id="curriculo">
+          <h2>Grade curricular aplicada ao Jade-stock (nível superior)</h2>
+          <p class="mini">
+            Esta grade une ementas de Ciências Contábeis, Estatística e IA para formar uma base robusta de produto,
+            dados e governança. O objetivo é você entender o sistema por completo, inclusive os módulos avançados.
+          </p>
+          <div class="grid-3">
+            <article class="tile">
+              <strong>Trilha Ciências Contábeis (core)</strong>
+              <ul>
+                <li>Contabilidade introdutória, intermediária e avançada.</li>
+                <li>Demonstrações: Balanço Patrimonial, DRE, DFC, DMPL e notas explicativas.</li>
+                <li>Contabilidade de custos e controladoria.</li>
+                <li>Auditoria contábil, controles internos e compliance.</li>
+                <li>Tributário aplicado e impactos por operação.</li>
+                <li>Análise de demonstrações e indicadores.</li>
+              </ul>
+            </article>
+            <article class="tile">
+              <strong>Trilha Estatística (core)</strong>
+              <ul>
+                <li>Probabilidade, inferência e amostragem.</li>
+                <li>Regressão e modelos lineares.</li>
+                <li>Séries temporais (ARIMA/SARIMA) e previsão.</li>
+                <li>Validação de modelo, erro e calibração.</li>
+                <li>Otimização e decisão baseada em dados.</li>
+              </ul>
+            </article>
+            <article class="tile">
+              <strong>Trilha IA/ML (core)</strong>
+              <ul>
+                <li>Fundamentos matemáticos de ML.</li>
+                <li>Modelos supervisionados e avaliação.</li>
+                <li>Deep learning para séries temporais.</li>
+                <li>MLOps: versionamento, deploy e rollback.</li>
+                <li>Governança e auditoria de recomendação.</li>
+              </ul>
+            </article>
+          </div>
+          <div class="refs" style="margin-top: 12px;">
+            <article class="ref"><div class="thumb docs">Grade Contábeis<div class="sub">Referência acadêmica</div></div><div class="ref-body"><strong>UEM - Ciências Contábeis (currículo)</strong><p>Estrutura curricular de graduação para base contábil sólida.</p><a href="https://www.uem.br/cursos/graduacao/campus-maringa/ciencias-contabeis/curriculo-pleno-e-oferta-das-disciplinas" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+            <article class="ref"><div class="thumb data">Grade Estatística<div class="sub">Referência acadêmica</div></div><div class="ref-body"><strong>UFPR - Estatística</strong><p>Base curricular para modelagem, inferência e previsão.</p><a href="https://www.ufpr.br/portalufpr/noticias/estatistica/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+            <article class="ref"><div class="thumb data">Machine Learning<div class="sub">Referência internacional</div></div><div class="ref-body"><strong>Stanford CS229</strong><p>Ementa clássica para organizar estudos de ML com rigor.</p><a href="https://cs229.stanford.edu/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+            <article class="ref"><div class="thumb video">Vídeos PT-BR<div class="sub">Contábeis + Estatística + IA</div></div><div class="ref-body"><strong>YouTube PT-BR (busca integrada)</strong><p>Atalho para aulas em português nas três frentes.</p><a href="https://www.youtube.com/results?search_query=contabilidade+dre+dfc+auditoria+estatistica+machine+learning+portugues" target="_blank" rel="noopener noreferrer">Abrir vídeos PT-BR</a></div></article>
           </div>
         </section>
 
@@ -546,14 +594,27 @@
             </summary>
             <div class="module-body">
               <div class="split">
-                <section class="box"><h4>O que dominar</h4><ul><li>Partidas dobradas e classificação contábil.</li><li>Estoque sob normas (IAS 2 / NBC correlatas).</li><li>Conciliação operacional x contábil.</li><li>Exceção com aprovação rastreável.</li></ul></section>
-                <section class="box"><h4>Aplicação no Jade-stock</h4><ul><li>Tabela de mapeamento `evento_wms -> lançamento`.</li><li>Consumer contábil com retry + DLQ.</li><li>Relatório de divergência e reconciliação.</li><li>Trilha de auditoria ponta a ponta.</li></ul></section>
+                <section class="box"><h4>O que dominar (escopo robusto)</h4><ul><li>Partidas dobradas, plano de contas e natureza das contas.</li><li>Demonstrações: BP, DRE, DFC, DMPL e notas explicativas.</li><li>Fechamento contábil mensal e anual.</li><li>Contabilidade de custos e controladoria.</li><li>Auditoria contábil e controles internos.</li><li>Tributário aplicado (impactos por operação).</li><li>Conciliação operacional x contábil.</li></ul></section>
+                <section class="box"><h4>Aplicação no Jade-stock</h4><ul><li>Tabela de mapeamento `evento_wms -> lançamento` versionada.</li><li>Livro razão por evento com `correlation_id`.</li><li>Base automática para DRE por período e categoria.</li><li>Estrutura para BP e DFC a partir dos lançamentos.</li><li>Consumer contábil com retry + DLQ.</li><li>Relatório de divergência e reconciliação.</li><li>Trilha de auditoria ponta a ponta.</li></ul></section>
+              </div>
+              <div class="grid-3">
+                <article class="tile"><strong>Módulo Contábil 1</strong>Fundamentos e plano de contas. Entrega: matriz de lançamentos do WMS.</article>
+                <article class="tile"><strong>Módulo Contábil 2</strong>DRE, BP, DFC, DMPL. Entrega: estrutura de reports financeiros.</article>
+                <article class="tile"><strong>Módulo Contábil 3</strong>Auditoria e controles internos. Entrega: checklist de conformidade.</article>
+                <article class="tile"><strong>Módulo Contábil 4</strong>Custos, margem e controladoria. Entrega: visão gerencial por SKU/categoria.</article>
+                <article class="tile"><strong>Módulo Contábil 5</strong>Tributário aplicado. Entrega: mapa de impacto tributário por evento.</article>
+                <article class="tile"><strong>Módulo Contábil 6</strong>Fechamento e reconciliação. Entrega: rotina mensal auditável.</article>
               </div>
               <div class="refs">
-                <article class="ref"><div class="thumb docs">IAS 2<div class="sub">Inventories (IFRS)</div></div><div class="ref-body"><strong>IAS 2</strong><p>Base internacional para tratamento de estoque.</p><a href="https://www.ifrs.org/issued-standards/list-of-standards/ias-2-inventories/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb docs">IAS 1<div class="sub">Financial Statements</div></div><div class="ref-body"><strong>IAS 1</strong><p>Apresentação das demonstrações financeiras (inclui DRE/BP).</p><a href="https://www.ifrs.org/issued-standards/list-of-standards/ias-1-presentation-of-financial-statements/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb docs">IAS 7<div class="sub">Cash Flows</div></div><div class="ref-body"><strong>IAS 7</strong><p>Fundamento para DFC (fluxo de caixa).</p><a href="https://www.ifrs.org/issued-standards/list-of-standards/ias-7-statement-of-cash-flows/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb docs">IAS 2<div class="sub">Inventories</div></div><div class="ref-body"><strong>IAS 2</strong><p>Base internacional para tratamento de estoque.</p><a href="https://www.ifrs.org/issued-standards/list-of-standards/ias-2-inventories/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
                 <article class="ref"><div class="thumb docs">Normas CFC<div class="sub">Brasil</div></div><div class="ref-body"><strong>CFC - normas completas</strong><p>Normas brasileiras para aderência local.</p><a href="https://portalrestore.cfc.org.br/tecnica/normas-brasileiras-de-contabilidade/normas-completas/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
                 <article class="ref"><div class="thumb docs">CPC<div class="sub">Pronunciamentos</div></div><div class="ref-body"><strong>CPC oficial</strong><p>Material normativo de apoio ao desenho contábil.</p><a href="https://www.cpc.org.br/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
-                <article class="ref"><div class="thumb video">Vídeos PT-BR<div class="sub">Contabilidade básica</div></div><div class="ref-body"><strong>YouTube PT-BR (busca)</strong><p>Partidas dobradas em português para fixar os fundamentos.</p><a href="https://www.youtube.com/results?search_query=partidas+dobradas+contabilidade+portugues" target="_blank" rel="noopener noreferrer">Abrir vídeos PT-BR</a></div></article>
+                <article class="ref"><div class="thumb docs">CVM Dados<div class="sub">DFP/ITR</div></div><div class="ref-body"><strong>CVM - dados abertos</strong><p>Base real para estudar demonstrações financeiras brasileiras.</p><a href="https://dados.cvm.gov.br/" target="_blank" rel="noopener noreferrer">Abrir referência</a></div></article>
+                <article class="ref"><div class="thumb video">Vídeos PT-BR<div class="sub">DRE, BP e DFC</div></div><div class="ref-body"><strong>YouTube PT-BR (demonstrações)</strong><p>Aulas em português de DRE, balanço e fluxo de caixa.</p><a href="https://www.youtube.com/results?search_query=dre+balanco+patrimonial+dfc+portugues" target="_blank" rel="noopener noreferrer">Abrir vídeos PT-BR</a></div></article>
+                <article class="ref"><div class="thumb video">Vídeos PT-BR<div class="sub">Auditoria contábil</div></div><div class="ref-body"><strong>YouTube PT-BR (auditoria)</strong><p>Fundamentos e prática de auditoria contábil.</p><a href="https://www.youtube.com/results?search_query=auditoria+contabil+portugues" target="_blank" rel="noopener noreferrer">Abrir vídeos PT-BR</a></div></article>
+                <article class="ref"><div class="thumb video">Vídeos PT-BR<div class="sub">Custos e controladoria</div></div><div class="ref-body"><strong>YouTube PT-BR (custos/controladoria)</strong><p>Base gerencial para margens, orçamento e decisão.</p><a href="https://www.youtube.com/results?search_query=contabilidade+de+custos+controladoria+portugues" target="_blank" rel="noopener noreferrer">Abrir vídeos PT-BR</a></div></article>
               </div>
             </div>
           </details>
