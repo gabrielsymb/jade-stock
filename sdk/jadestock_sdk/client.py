@@ -1,12 +1,15 @@
-"""Cliente HTTP minimo para a API WMS (v1)."""
+"""Cliente HTTP para a API WMS (v1) com foco em integracao simples."""
 
 from __future__ import annotations
 
 import json
+import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
 from typing import Any
+
+from .utils import new_correlation_id
 
 
 @dataclass(frozen=True)
@@ -27,10 +30,20 @@ class JadeStockClient:
         base_url: str = "http://127.0.0.1:8000",
         timeout_seconds: float = 10.0,
         bearer_token: str | None = None,
+        retries: int = 0,
+        retry_backoff_seconds: float = 0.2,
+        auto_correlation_id: bool = False,
     ) -> None:
         self._base_url = base_url.rstrip("/")
         self._timeout = timeout_seconds
         self._bearer_token = bearer_token
+        self._retries = max(0, int(retries))
+        self._retry_backoff_seconds = max(0.0, float(retry_backoff_seconds))
+        self._auto_correlation_id = auto_correlation_id
+
+    def set_bearer_token(self, token: str | None) -> None:
+        """Atualiza token de autenticacao sem recriar o cliente."""
+        self._bearer_token = token
 
     def health(self) -> dict[str, Any]:
         return self._request("GET", "/v1/health")
@@ -77,6 +90,11 @@ class JadeStockClient:
         }
         data = None
         if payload is not None:
+            if self._auto_correlation_id and method == "POST":
+                corr = payload.get("correlation_id")
+                if not isinstance(corr, str) or not corr.strip():
+                    payload = dict(payload)
+                    payload["correlation_id"] = new_correlation_id()
             data = json.dumps(payload).encode("utf-8")
             headers["Content-Type"] = "application/json"
             corr = payload.get("correlation_id")
@@ -92,29 +110,44 @@ class JadeStockClient:
             headers=headers,
             method=method,
         )
-        try:
-            with urllib.request.urlopen(req, timeout=self._timeout) as resp:
-                body = resp.read()
-                return json.loads(body.decode("utf-8")) if body else {}
-        except urllib.error.HTTPError as exc:
-            raw = exc.read().decode("utf-8")
+        for attempt in range(self._retries + 1):
             try:
-                payload_err = json.loads(raw) if raw else {}
-            except json.JSONDecodeError:
-                payload_err = {}
-            raise JadeStockSDKError(
-                status_code=exc.code,
-                code=payload_err.get("code", "http_error"),
-                message=payload_err.get("message", raw or "erro_http"),
-                details=payload_err.get("details"),
-                correlation_id=payload_err.get("correlation_id"),
-            ) from exc
-        except urllib.error.URLError as exc:
-            reason = str(getattr(exc, "reason", exc))
-            raise JadeStockSDKError(
-                status_code=503,
-                code="upstream_unreachable",
-                message=f"Nao foi possivel conectar na API Jade-stock em {url}: {reason}",
-                details={"url": url, "reason": reason},
-                correlation_id=None,
-            ) from exc
+                with urllib.request.urlopen(req, timeout=self._timeout) as resp:
+                    body = resp.read()
+                    return json.loads(body.decode("utf-8")) if body else {}
+            except urllib.error.HTTPError as exc:
+                raw = exc.read().decode("utf-8")
+                try:
+                    payload_err = json.loads(raw) if raw else {}
+                except json.JSONDecodeError:
+                    payload_err = {}
+
+                # Compatibilidade com erros no formato {"detail": {...}}
+                if isinstance(payload_err.get("detail"), dict):
+                    payload_err = payload_err["detail"]
+
+                raise JadeStockSDKError(
+                    status_code=exc.code,
+                    code=payload_err.get("code", "http_error"),
+                    message=payload_err.get("message", raw or "erro_http"),
+                    details=payload_err.get("details"),
+                    correlation_id=payload_err.get("correlation_id"),
+                ) from exc
+            except urllib.error.URLError as exc:
+                if attempt < self._retries:
+                    time.sleep(self._retry_backoff_seconds * (attempt + 1))
+                    continue
+                reason = str(getattr(exc, "reason", exc))
+                raise JadeStockSDKError(
+                    status_code=503,
+                    code="upstream_unreachable",
+                    message=f"Nao foi possivel conectar na API Jade-stock em {url}: {reason}",
+                    details={"url": url, "reason": reason},
+                    correlation_id=None,
+                ) from exc
+
+        raise JadeStockSDKError(
+            status_code=500,
+            code="sdk_unexpected_state",
+            message="falha inesperada no cliente SDK",
+        )
