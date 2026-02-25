@@ -214,6 +214,58 @@ cd WMS
 ./scripts/release_gate.sh
 ```
 
+#### Pipeline Profissional Detalhado
+
+**Etapa 1 - Validação de Dependências:**
+- Verifica bibliotecas Python nas versões corretas
+- Baseado em requirements versionado
+
+**Etapa 2 - Conexão e Validação do Banco:**
+- Testa conectividade PostgreSQL
+- Verifica permissões necessárias nos schemas
+
+**Etapa 3 - Aplicação de Migrations:**
+- Alembic executa migrations pendentes em ordem
+- Falha interrompe deploy, mantendo consistência
+
+**Etapa 4 - Testes de Sanidade Pós-Migration:**
+- Subconjunto de testes de integração
+- Confirma schema atualizado e operacional
+
+**Etapa 5 - Inicialização dos Microserviços:**
+- Apenas após validações anteriores
+- Módulos WMS, Contábil, IA iniciados
+
+#### Health Check de Startup
+
+Cada microserviço implementa verificação de dependências críticas:
+- **WMS:** Schema wms, tabelas críticas, idempotência
+- **Contábil:** Schema contabil, acesso event_store
+- **IA:** Schema ia, modelos carregados
+
+**Falha de Startup:**
+- Recusa inicializar com erro descritivo
+- Orquestrador detecta e aciona alertas
+- Usuário vê mensagem clara sem detalhes técnicos
+
+#### Integração com Orquestrador de Contêineres
+
+**Docker Compose:**
+- PostgreSQL healthy antes das aplicações
+- Migrations executam e concluem antes dos serviços
+- Deploy inteiro: `docker compose up`
+
+#### Ambientes Separados
+
+**Desenvolvimento:** Novas migrations criadas e testadas localmente
+**Homologação:** Réplica exata de produção, release gate executado
+**Produção:** Apenas código validado
+
+**Isolamento Inicial:**
+- Dois schemas no mesmo servidor PostgreSQL
+- Padrão de isolamento já adotado pelos domínios
+- Migração para servidores separados facilitada
+
 ---
 
 ## 5. APIS E ENDPOINTS
@@ -263,6 +315,28 @@ cd WMS
 }
 ```
 
+### 5.4 Estratégia de Versionamento de API
+
+**Quando Criar Nova Versão:**
+- **Quebra de compatibilidade:** Mudar path de `/v1/` para `/v2/`
+- **Backward-compatible:** Manter em `/v1/` com novo campo opcional
+
+**Política de Suporte:**
+- **Janela de suporte:** 6 meses após lançamento da v2
+- **Depreciação:** Headers `Deprecation: true` + `Sunset: <data>`
+- **Remoção:** Apenas após janela de suporte expirar
+
+**Exemplo de Evolução:**
+```
+v1: POST /v1/movimentacoes (campo "endereco" obrigatório)
+v2: POST /v2/movimentacoes (campo "endereco" opcional, novo campo "endereco_id")
+```
+
+**Processo de Depreciação:**
+1. **Anúncio:** Documentação + headers de aviso
+2. **Período:** 6 meses para migração
+3. **Remoção:** Desativação completa da v1
+
 ---
 
 ## 6. EVENT STORE E COMUNICAÇÃO
@@ -275,6 +349,61 @@ cd WMS
   "event_name": "movimentacao_estoque_registrada",
   "event_id": "uuid-v4",
   "occurred_at": "2026-02-21T12:00:00Z",
+  "actor_id": "op_42",
+  "tenant_id": "lojax",
+  "correlation_id": "mov_20260221_001",
+  "schema_version": "1.0",
+  "payload": {...}
+}
+```
+
+#### 6.1.1 Persistência em PostgreSQL
+
+**Tabela `event_store.stored_events`**:
+```sql
+CREATE TABLE event_store.stored_events (
+    id BIGSERIAL PRIMARY KEY,
+    event_id UUID NOT NULL UNIQUE,
+    event_name VARCHAR(255) NOT NULL,
+    occurred_at TIMESTAMPTZ NOT NULL,
+    actor_id VARCHAR(100),
+    tenant_id VARCHAR(100) NOT NULL,
+    correlation_id VARCHAR(100),
+    schema_version VARCHAR(20) NOT NULL DEFAULT '1.0',
+    payload JSONB NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    processed_at TIMESTAMPTZ,
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'processed', 'failed', 'dead_letter')),
+    retry_count INTEGER DEFAULT 0,
+    error_message TEXT,
+    
+    -- Índices para performance
+    CONSTRAINT idx_stored_events_tenant_occurred UNIQUE (tenant_id, occurred_at, event_id),
+    INDEX idx_stored_events_event_name (event_name),
+    INDEX idx_stored_events_correlation (correlation_id),
+    INDEX idx_stored_events_status (status)
+);
+```
+
+**Consulta para Debugging**:
+```sql
+-- Eventos por correlation_id
+SELECT * FROM event_store.stored_events 
+WHERE correlation_id = 'mov_20260221_001' 
+ORDER BY occurred_at;
+
+-- Eventos falhados
+SELECT * FROM event_store.stored_events 
+WHERE status = 'failed' 
+ORDER BY created_at DESC;
+
+-- Eventos por tenant nas últimas 24h
+SELECT event_name, COUNT(*) as total 
+FROM event_store.stored_events 
+WHERE tenant_id = 'lojax' 
+  AND occurred_at >= NOW() - INTERVAL '24 hours'
+GROUP BY event_name;
+```
   "actor_id": "op_42",
   "tenant_id": "lojax",
   "correlation_id": "mov_001",
@@ -415,13 +544,138 @@ PYTHONPATH=. python3 -m uvicorn LaboratorioDepositoBebidas.app:app --reload --po
 - Kubernetes/Docker Swarm
 - Escalabilidade horizontal
 
+#### Deploy Inicial: Servidor Único
+
+Na fase inicial, todos os microserviços podem coexistir em um único servidor, comunicando-se via localhost. Essa configuração simplifica radicalmente a operação: um único servidor para monitorar, um único conjunto de logs para analisar e um único ponto de deploy para gerenciar.
+
+**Mitigação de Risco:**
+- Restart automático dos serviços (systemd/PM2)
+- Backups periódicos em armazenamento separado
+- Health check de startup
+
+#### Contêinerização Detalhada
+
+À medida que o sistema cresce, a contêinerização via Docker se torna estratégica:
+
+**Benefícios Específicos:**
+- **Módulo IA:** Versões específicas de bibliotecas sem conflito
+- **Módulo Contábil:** Reindependente sem interromper WMS
+- **Persistência:** Docker Volumes separados dos contêineres
+
+**Decisão de Adoção:**
+- Guiada por necessidade concreta, não tendência
+- Overhead vs benefícios para equipe enxuta
+- Momento ideal: múltiplos ambientes ou clientes
+
+#### Orquestrador de Atualizações
+
+**Shadow Update:**
+- Nova versão baixada em segundo plano
+- Troca em momento de baixo impacto
+- Downtime < 5 segundos
+
+**Fluxo de Atualização:**
+1. Detectar nova imagem no registro
+2. Download em segundo plano (camadas alteradas apenas)
+3. Armazenar como inativa
+4. Aplicar: `docker stop <antigo> && docker run <novo>`
+
+**Ferramentas:**
+- **Watchtower:** Automação simples
+- **SDK Integration:** Controle fino via API
+
+#### Escalabilidade Horizontal
+
+- **Load Balancers:** APIs RESTful prontas
+- **Event Store:** Migrável para RabbitMQ/Kafka
+- **Kubernetes:** Evolução natural, apenas quando justificável
+
 ### 9.3 Orquestrador de Licenças
 
-**Validação Dinâmica**:
+**Validação Dinâmica:**
 - Consulta a servidor de licenças
 - Grace period offline (7 dias)
 - Controle remoto de revogação
 - Telemetria de uso
+
+#### Funcionamento
+
+O orquestrador valida licenças antes de iniciar contêineres:
+
+**Estados da Licença:**
+- **Ativa:** Prossegue normalmente
+- **Expirada:** Bloqueia novos contêineres, mantém ativos até fim do expediente
+- **Revogada:** Derruba todos imediatamente
+
+#### Licença Amarrada ao Registro
+
+**Proteção Adicional:**
+- Registro privado exige token de licença
+- Download bloqueado sem token válido
+- Propriedade intelectual protegida
+
+#### Operação Offline
+
+**Grace Period:**
+- 7 dias padrão, renovável por validação
+- Token criptografado localmente
+- Avisos progressivos antes do bloqueio
+
+#### Controle Remoto e Telemetria
+
+**Capacidades:**
+- Suspensão imediata por inadimplência
+- Migração entre máquinas
+- Detecção de uso anômalo
+- Métricas: sessões ativas, módulos, instalação
+
+### 9.4 Autenticação via OAuth 2.0
+
+O Jade-stock delega autenticação a provedores consolidados (Google, Microsoft, Apple), eliminando gerenciamento de senhas.
+
+#### Fluxo OAuth 2.0
+
+1. Usuário clica "Entrar com Google"
+2. Cliente abre navegador/webview para login
+3. Google redireciona com token autorização
+4. Backend valida token junto à API Google
+5. Backend extrai identificador único e e-mail
+6. Verifica/cria usuário no banco
+7. Retorna token de sessão Jade-stock
+
+#### Integração com Licenciamento
+
+**Pipeline Duplo:**
+1. **Identidade:** OAuth (responsabilidade do provedor)
+2. **Autorização:** Licença (responsabilidade Jade-stock)
+
+#### Provedores Suportados
+
+- **Google:** Maior cobertura, um clique
+- **Microsoft:** Ambientes corporativos (Azure AD)
+- **Apple:** Obrigatório para App Store
+
+#### Dados Armazenados
+
+**Apenas o necessário:**
+- Identificador único do provedor (sub)
+- E-mail para comunicações
+- Nome de exibição
+- Provedor de origem
+- Datas de acesso
+- Vínculo com licença
+
+#### Tokens
+
+- **Access Token:** Curta duração (1h), não persistido
+- **Refresh Token:** Longa duração, criptografado em BD
+- **Sessão Interna:** JWT, armazenado localmente seguro
+
+#### Experiência do Usuário
+
+- **Primeiro uso:** Um clique (sessão Google ativa)
+- **Usos subsequentes:** Acesso direto sem re-login
+- **Similar ao:** Creative Cloud, Figma, Notion
 
 ---
 
@@ -517,6 +771,126 @@ ex: DEP-A-01 (Depósito-A-Prateleira-01)
 - Métricas básicas
 - Alertas operacionais
 
+#### 12.2.1 Métricas e Observabilidade (Fase B)
+
+**Métricas Chave para Implementar:**
+```yaml
+# Métricas de Negócio
+wms_movimentacoes_total{tenant="lojax"} 45
+wms_estoque_atual{sku="SKU-001"} 150.5
+wms_recebimentos_pendentes{tenant="lojax"} 12
+
+# Métricas de Performance
+wms_request_duration_seconds{endpoint="/v1/movimentacoes",method="POST"} 0.245
+wms_requests_total{status="200",endpoint="/v1/movimentacoes"} 1023
+wms_concurrent_connections 15
+
+# Métricas de Infraestrutura
+wms_database_connections_active 8
+wms_event_store_pending_events 5
+wms_idempotency_cache_size 1024
+```
+
+**Implementação Simples com Prometheus:**
+```python
+# Exemplo de middleware de métricas
+from prometheus_client import Counter, Histogram, Gauge
+import time
+import logging
+
+REQUEST_COUNT = Counter('wms_requests_total', 'Total requests', ['method', 'endpoint', 'status'])
+REQUEST_DURATION = Histogram('wms_request_duration_seconds', 'Request duration')
+ACTIVE_CONNECTIONS = Gauge('wms_database_connections_active', 'Active DB connections')
+
+class MetricsMiddleware:
+    def __init__(self, app):
+        self.app = app
+    
+    def __call__(self, environ, start_response):
+        start_time = time.time()
+        
+        def custom_start_response(status, headers, exc_info=None):
+            REQUEST_COUNT.labels(
+                method=environ['REQUEST_METHOD'],
+                endpoint=environ['PATH_INFO'],
+                status=status.split()[0]
+            ).inc()
+            
+            REQUEST_DURATION.observe(time.time() - start_time)
+            return start_response(status, headers, exc_info)
+        
+        return self.app(environ, custom_start_response)
+```
+
+**Coleta com Agentes Leves:**
+```bash
+# Node Exporter para métricas do sistema
+docker run -d --net="host" \
+  --pid="host" \
+  --mounts="host:/host" \
+  quay.io/prometheus/node-exporter
+
+# PostgreSQL Exporter para métricas do banco
+docker run -d --net="host" \
+  -e DATA_SOURCE_NAME="postgresql://wms:wms@localhost:5432/wms" \
+  prometheuscommunity/postgres-exporter
+
+# Custom exporter para métricas WMS
+python3 -m wms.infrastructure.metrics.prometheus_exporter
+```
+
+**Configuração Prometheus:**
+```yaml
+# prometheus.yml
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'wms-api'
+    static_configs:
+      - targets: ['localhost:8001']
+    metrics_path: '/metrics'
+    
+  - job_name: 'node'
+    static_configs:
+      - targets: ['localhost:9100']
+      
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['localhost:9187']
+```
+
+**Alertas Essenciais:**
+```yaml
+# alerts.yml
+groups:
+  - name: wms_alerts
+    rules:
+      - alert: WMSHighErrorRate
+        expr: rate(wms_requests_total{status="5xx"}[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Taxa de erro alta na API WMS"
+          
+      - alert: WMSHighResponseTime
+        expr: histogram_quantile(0.95, rate(wms_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Tempo de resposta acima de 2 segundos (P95)"
+          
+      - alert: WMSEventStoreBacklog
+        expr: wms_event_store_pending_events > 100
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Event Store com acúmulo de eventos não processados"
+```
+
 **Fase C - Módulo IA**
 - Processamento estatístico
 - Redes neurais para previsão
@@ -576,6 +950,110 @@ WHERE correlation_id = 'SEU_CORRELATION_ID';
 **Solução**:
 - Use o mesmo payload para retry
 - Gere novo correlation_id para nova operação
+
+**Erro 5xx (Erro Interno do Servidor)**:
+```bash
+# Verificar logs do serviço
+tail -f ./WMS/logs/api.log
+
+# Verificar status dos containers Docker
+docker compose ps
+docker compose logs wms-api
+```
+
+**Falha na Release Gate**:
+```bash
+# Executar testes manualmente para identificar falha específica
+cd WMS
+python3 -m unittest discover -s tests -p 'test_*.py' -v
+
+# Verificar qual teste específico falhou
+python3 -m unittest tests.test_api_postgres_integration.TestRegistrarMovimentacao -v
+```
+
+**Evento Não Processado**:
+```sql
+-- Verificar eventos falhados
+SELECT * FROM event_store.stored_events 
+WHERE status = 'failed' 
+ORDER BY created_at DESC;
+
+-- Verificar Dead-Letter Queue
+SELECT * FROM event_store.stored_events 
+WHERE status = 'dead_letter' 
+ORDER BY created_at DESC;
+
+-- Analisar causa da falha
+SELECT event_name, error_message, retry_count 
+FROM event_store.stored_events 
+WHERE status = 'failed' 
+  AND correlation_id = 'SEU_CORRELATION_ID';
+```
+
+**Timeout de Conexão**:
+```bash
+# Verificar se PostgreSQL está rodando
+docker compose ps postgres
+
+# Testar conexão manualmente
+psql "postgresql://wms:wms@localhost:5432/wms"
+
+# Verificar configuração de rede
+docker network ls
+docker network inspect jade-stock_wms-network
+```
+
+### 13.4 Testes de Idempotência - Exemplo Prático
+
+**Como Testar Manualmente**:
+```bash
+# Primeira requisição (deve retornar 201)
+curl -X POST http://localhost:8001/v1/movimentacoes \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: test-123" \
+  -d '{
+    "correlation_id": "test-123",
+    "sku_id": "SKU-001",
+    "quantidade": 10.0,
+    "tipo": "entrada",
+    "endereco_destino": "DEP-A-01"
+  }'
+
+# Segunda requisição igual (deve retornar 409)
+curl -X POST http://localhost:8001/v1/movimentacoes \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: test-123" \
+  -d '{
+    "correlation_id": "test-123",
+    "sku_id": "SKU-001",
+    "quantidade": 10.0,
+    "tipo": "entrada",
+    "endereco_destino": "DEP-A-01"
+  }'
+
+# Terceira requisição com payload diferente (deve retornar 409)
+curl -X POST http://localhost:8001/v1/movimentacoes \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: test-123" \
+  -d '{
+    "correlation_id": "test-123",
+    "sku_id": "SKU-001",
+    "quantidade": 15.0,  # Payload diferente!
+    "tipo": "entrada",
+    "endereco_destino": "DEP-A-01"
+  }'
+```
+
+**Verificação no Banco**:
+```sql
+-- Apenas um registro deve existir
+SELECT COUNT(*) as total, 
+       request_payload::json->>'quantidade' as quantidade
+FROM idempotency_command 
+WHERE correlation_id = 'test-123';
+
+-- Resultado esperado: COUNT = 1, quantidade = 10.0
+```
 
 ### 13.4 Testes Rápidos
 
