@@ -5,7 +5,8 @@ from __future__ import annotations
 import os
 from dataclasses import asdict
 from datetime import date
-from typing import Literal
+from typing import Callable, Dict, Literal, Type
+import inspect
 
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
@@ -733,6 +734,85 @@ def _execute_postgres_with_idempotency(
     return response_payload
 
 
+def execute_use_case(
+    operation_name: str,
+    use_case_class: Type,
+    correlation_id: str,
+    request_payload: dict,
+    repository_factories: Dict[str, Callable],
+    execute_fn: Callable,
+) -> dict:
+    """
+    Função mestra universal para execução de use cases com PostgreSQL.
+
+    Padrões aplicados:
+    - Factory Method (GoF, Gamma et al., 1994): instanciação dos repositórios via factories.
+    - Dependency Injection (Fowler, 2004): repositórios injetados externamente no use case.
+
+    Args:
+        operation_name:       Nome da operação para idempotência e logging.
+        use_case_class:       Classe do use case a ser instanciado.
+        correlation_id:       ID de correlação da requisição (garante idempotência).
+        request_payload:      Payload serializado da requisição (dict).
+        repository_factories: Dict mapeando nome_do_argumento -> classe_do_repositório.
+                              Ex.: {'movimentacao_repo': PostgresMovimentacaoRepository}
+        execute_fn:           Função que recebe o use case instanciado e retorna
+                              um callable sem argumentos para o executor de idempotência.
+                              Padrão: lambda uc: lambda: asdict(uc.execute(data))
+
+    Returns:
+        dict com o resultado serializado da operação.
+
+    Raises:
+        Propaga qualquer exceção levantada pelo use case ou pela infraestrutura.
+        O tratamento HTTP (_raise_http) permanece nas rotas, não aqui.
+    """
+    conn = get_connection_postgres()
+    try:
+        # Repositórios universais — presentes em TODOS os use cases
+        estoque_repo = PostgresEstoqueRepository(conn)
+        publisher    = PostgresEventStore(conn, tenant_id=TENANT_ID)
+
+        # Repositórios específicos via Factory Method
+        specific_repos = {
+            name: factory(conn)
+            for name, factory in repository_factories.items()
+        }
+
+        # Injeção inteligente — só entrega o que o use case realmente pede
+        sig = inspect.signature(use_case_class.__init__)
+        params = sig.parameters
+        
+        # Constrói o dict de repositórios apenas com o que o use case solicita
+        repositories_to_inject = {}
+        
+        # Adiciona repositórios específicos se solicitados
+        for name, repo in specific_repos.items():
+            if name in params:
+                repositories_to_inject[name] = repo
+        
+        # Adiciona universais apenas se o use case pedir por esse nome
+        if 'estoque_repo' in params:
+            repositories_to_inject['estoque_repo'] = estoque_repo
+        if 'publisher' in params:
+            repositories_to_inject['publisher'] = publisher
+
+        # Dependency Injection — use case recebe os repositórios de fora
+        use_case = use_case_class(**repositories_to_inject)
+
+        # Execução com transação atômica e idempotência — comportamento preservado
+        with postgres_transaction(conn):
+            return _execute_postgres_with_idempotency(
+                connection=conn,
+                operation_name=operation_name,
+                correlation_id=correlation_id,
+                request_payload=request_payload,
+                execute=execute_fn(use_case),
+            )
+    finally:
+        conn.close()
+
+
 @app.get(
     "/v1/health",
     summary="Health check da API",
@@ -760,23 +840,14 @@ def registrar_movimentacao(body: MovimentacaoRequest) -> dict:
     data = RegistrarMovimentacaoEstoqueInput(**body.model_dump())
     try:
         if API_BACKEND == "postgres":
-            conn = get_connection_postgres()
-            try:
-                estoque_repo = PostgresEstoqueRepository(conn)
-                mov_repo = PostgresMovimentacaoRepository(conn)
-                publisher = PostgresEventStore(conn, tenant_id=TENANT_ID)
-                use_case = RegistrarMovimentacaoEstoque(mov_repo, estoque_repo, publisher)
-                with postgres_transaction(conn):
-                    out = _execute_postgres_with_idempotency(
-                        connection=conn,
-                        operation_name="registrar_movimentacao",
-                        correlation_id=data.correlation_id,
-                        request_payload=body.model_dump(mode="json"),
-                        execute=lambda: asdict(use_case.execute(data)),
-                    )
-                return out
-            finally:
-                conn.close()
+            return execute_use_case(
+                operation_name="registrar_movimentacao",
+                use_case_class=RegistrarMovimentacaoEstoque,
+                correlation_id=body.correlation_id,
+                request_payload=body.model_dump(mode="json"),
+                repository_factories={"movimentacao_repo": PostgresMovimentacaoRepository},
+                execute_fn=lambda uc: lambda: asdict(uc.execute(data)),
+            )
 
         use_case = RegistrarMovimentacaoEstoque(
             _inmemory_mov,
@@ -802,23 +873,14 @@ def registrar_ajuste(body: AjusteRequest) -> dict:
     data = RegistrarAjusteEstoqueInput(**body.model_dump())
     try:
         if API_BACKEND == "postgres":
-            conn = get_connection_postgres()
-            try:
-                estoque_repo = PostgresEstoqueRepository(conn)
-                mov_repo = PostgresMovimentacaoRepository(conn)
-                publisher = PostgresEventStore(conn, tenant_id=TENANT_ID)
-                use_case = RegistrarAjusteEstoque(mov_repo, estoque_repo, publisher)
-                with postgres_transaction(conn):
-                    out = _execute_postgres_with_idempotency(
-                        connection=conn,
-                        operation_name="registrar_ajuste",
-                        correlation_id=data.correlation_id,
-                        request_payload=body.model_dump(mode="json"),
-                        execute=lambda: asdict(use_case.execute(data)),
-                    )
-                return out
-            finally:
-                conn.close()
+            return execute_use_case(
+                operation_name="registrar_ajuste",
+                use_case_class=RegistrarAjusteEstoque,
+                correlation_id=body.correlation_id,
+                request_payload=body.model_dump(mode="json"),
+                repository_factories={"movimentacao_repo": PostgresMovimentacaoRepository},
+                execute_fn=lambda uc: lambda: asdict(uc.execute(data)),
+            )
 
         use_case = RegistrarAjusteEstoque(
             _inmemory_mov,
@@ -844,23 +906,14 @@ def registrar_avaria(body: AvariaRequest) -> dict:
     data = RegistrarAvariaEstoqueInput(**body.model_dump())
     try:
         if API_BACKEND == "postgres":
-            conn = get_connection_postgres()
-            try:
-                estoque_repo = PostgresEstoqueRepository(conn)
-                mov_repo = PostgresMovimentacaoRepository(conn)
-                publisher = PostgresEventStore(conn, tenant_id=TENANT_ID)
-                use_case = RegistrarAvariaEstoque(mov_repo, estoque_repo, publisher)
-                with postgres_transaction(conn):
-                    out = _execute_postgres_with_idempotency(
-                        connection=conn,
-                        operation_name="registrar_avaria",
-                        correlation_id=data.correlation_id,
-                        request_payload=body.model_dump(mode="json"),
-                        execute=lambda: asdict(use_case.execute(data)),
-                    )
-                return out
-            finally:
-                conn.close()
+            return execute_use_case(
+                operation_name="registrar_avaria",
+                use_case_class=RegistrarAvariaEstoque,
+                correlation_id=body.correlation_id,
+                request_payload=body.model_dump(mode="json"),
+                repository_factories={"movimentacao_repo": PostgresMovimentacaoRepository},
+                execute_fn=lambda uc: lambda: asdict(uc.execute(data)),
+            )
 
         use_case = RegistrarAvariaEstoque(
             _inmemory_mov,
@@ -893,23 +946,14 @@ def registrar_recebimento(body: RecebimentoRequest) -> dict:
     )
     try:
         if API_BACKEND == "postgres":
-            conn = get_connection_postgres()
-            try:
-                estoque_repo = PostgresEstoqueRepository(conn)
-                rec_repo = PostgresRecebimentoRepository(conn)
-                publisher = PostgresEventStore(conn, tenant_id=TENANT_ID)
-                use_case = RegistrarRecebimento(rec_repo, estoque_repo, publisher)
-                with postgres_transaction(conn):
-                    out = _execute_postgres_with_idempotency(
-                        connection=conn,
-                        operation_name="registrar_recebimento",
-                        correlation_id=data.correlation_id,
-                        request_payload=body.model_dump(mode="json"),
-                        execute=lambda: asdict(use_case.execute(data)),
-                    )
-                return out
-            finally:
-                conn.close()
+            return execute_use_case(
+                operation_name="registrar_recebimento",
+                use_case_class=RegistrarRecebimento,
+                correlation_id=body.correlation_id,
+                request_payload=body.model_dump(mode="json"),
+                repository_factories={"recebimento_repo": PostgresRecebimentoRepository},
+                execute_fn=lambda uc: lambda: asdict(uc.execute(data)),
+            )
 
         use_case = RegistrarRecebimento(
             _inmemory_rec,
@@ -942,29 +986,17 @@ def registrar_inventario_ciclico(body: InventarioCiclicoRequest) -> dict:
     )
     try:
         if API_BACKEND == "postgres":
-            conn = get_connection_postgres()
-            try:
-                estoque_repo = PostgresEstoqueRepository(conn)
-                mov_repo = PostgresMovimentacaoRepository(conn)
-                inv_repo = PostgresInventarioRepository(conn)
-                publisher = PostgresEventStore(conn, tenant_id=TENANT_ID)
-                use_case = RegistrarInventarioCiclico(
-                    mov_repo,
-                    estoque_repo,
-                    inv_repo,
-                    publisher,
-                )
-                with postgres_transaction(conn):
-                    out = _execute_postgres_with_idempotency(
-                        connection=conn,
-                        operation_name="registrar_inventario_ciclico",
-                        correlation_id=data.correlation_id,
-                        request_payload=body.model_dump(mode="json"),
-                        execute=lambda: asdict(use_case.execute(data)),
-                    )
-                return out
-            finally:
-                conn.close()
+            return execute_use_case(
+                operation_name="registrar_inventario_ciclico",
+                use_case_class=RegistrarInventarioCiclico,
+                correlation_id=body.correlation_id,
+                request_payload=body.model_dump(mode="json"),
+                repository_factories={
+                    "movimentacao_repo": PostgresMovimentacaoRepository,
+                    "inventario_repo": PostgresInventarioRepository,
+                },
+                execute_fn=lambda uc: lambda: asdict(uc.execute(data)),
+            )
 
         use_case = RegistrarInventarioCiclico(
             _inmemory_mov,
@@ -991,23 +1023,14 @@ def registrar_politica_kanban(body: KanbanPoliticaRequest) -> dict:
     data = RegistrarPoliticaKanbanInput(**body.model_dump())
     try:
         if API_BACKEND == "postgres":
-            conn = get_connection_postgres()
-            try:
-                estoque_repo = PostgresEstoqueRepository(conn)
-                kanban_repo = PostgresKanbanRepository(conn)
-                publisher = PostgresEventStore(conn, tenant_id=TENANT_ID)
-                use_case = RegistrarPoliticaKanban(estoque_repo, kanban_repo, publisher)
-                with postgres_transaction(conn):
-                    out = _execute_postgres_with_idempotency(
-                        connection=conn,
-                        operation_name="registrar_politica_kanban",
-                        correlation_id=data.correlation_id,
-                        request_payload=body.model_dump(mode="json"),
-                        execute=lambda: asdict(use_case.execute(data)),
-                    )
-                return out
-            finally:
-                conn.close()
+            return execute_use_case(
+                operation_name="registrar_politica_kanban",
+                use_case_class=RegistrarPoliticaKanban,
+                correlation_id=body.correlation_id,
+                request_payload=body.model_dump(mode="json"),
+                repository_factories={"kanban_repo": PostgresKanbanRepository},
+                execute_fn=lambda uc: lambda: asdict(uc.execute(data)),
+            )
 
         use_case = RegistrarPoliticaKanban(
             _inmemory_estoque,
@@ -1038,23 +1061,14 @@ def processar_curva_abcd(body: CurvaABCDProcessarRequest) -> dict:
     )
     try:
         if API_BACKEND == "postgres":
-            conn = get_connection_postgres()
-            try:
-                estoque_repo = PostgresEstoqueRepository(conn)
-                politica_repo = PostgresPoliticaReposicaoRepository(conn)
-                publisher = PostgresEventStore(conn, tenant_id=TENANT_ID)
-                use_case = ProcessarCurvaABCD(estoque_repo, politica_repo, publisher)
-                with postgres_transaction(conn):
-                    out = _execute_postgres_with_idempotency(
-                        connection=conn,
-                        operation_name="processar_curva_abcd",
-                        correlation_id=data.correlation_id,
-                        request_payload=body.model_dump(mode="json"),
-                        execute=lambda: asdict(use_case.execute(data)),
-                    )
-                return out
-            finally:
-                conn.close()
+            return execute_use_case(
+                operation_name="processar_curva_abcd",
+                use_case_class=ProcessarCurvaABCD,
+                correlation_id=body.correlation_id,
+                request_payload=body.model_dump(mode="json"),
+                repository_factories={"politica_repo": PostgresPoliticaReposicaoRepository},
+                execute_fn=lambda uc: lambda: asdict(uc.execute(data)),
+            )
 
         use_case = ProcessarCurvaABCD(
             _inmemory_estoque,
@@ -1085,23 +1099,14 @@ def processar_giro_estoque(body: GiroEstoqueProcessarRequest) -> dict:
     )
     try:
         if API_BACKEND == "postgres":
-            conn = get_connection_postgres()
-            try:
-                estoque_repo = PostgresEstoqueRepository(conn)
-                politica_repo = PostgresPoliticaReposicaoRepository(conn)
-                publisher = PostgresEventStore(conn, tenant_id=TENANT_ID)
-                use_case = ProcessarGiroEstoque(estoque_repo, politica_repo, publisher)
-                with postgres_transaction(conn):
-                    out = _execute_postgres_with_idempotency(
-                        connection=conn,
-                        operation_name="processar_giro_estoque",
-                        correlation_id=data.correlation_id,
-                        request_payload=body.model_dump(mode="json"),
-                        execute=lambda: asdict(use_case.execute(data)),
-                    )
-                return out
-            finally:
-                conn.close()
+            return execute_use_case(
+                operation_name="processar_giro_estoque",
+                use_case_class=ProcessarGiroEstoque,
+                correlation_id=body.correlation_id,
+                request_payload=body.model_dump(mode="json"),
+                repository_factories={"politica_repo": PostgresPoliticaReposicaoRepository},
+                execute_fn=lambda uc: lambda: asdict(uc.execute(data)),
+            )
 
         use_case = ProcessarGiroEstoque(
             _inmemory_estoque,
@@ -1132,29 +1137,17 @@ def processar_sazonalidade(body: SazonalidadeProcessarRequest) -> dict:
     )
     try:
         if API_BACKEND == "postgres":
-            conn = get_connection_postgres()
-            try:
-                estoque_repo = PostgresEstoqueRepository(conn)
-                politica_repo = PostgresPoliticaReposicaoRepository(conn)
-                sinal_repo = PostgresSinalExternoRepository(conn)
-                publisher = PostgresEventStore(conn, tenant_id=TENANT_ID)
-                use_case = ProcessarSazonalidadeOperacional(
-                    estoque_repo,
-                    politica_repo,
-                    sinal_repo,
-                    publisher,
-                )
-                with postgres_transaction(conn):
-                    out = _execute_postgres_with_idempotency(
-                        connection=conn,
-                        operation_name="processar_sazonalidade_operacional",
-                        correlation_id=data.correlation_id,
-                        request_payload=body.model_dump(mode="json"),
-                        execute=lambda: asdict(use_case.execute(data)),
-                    )
-                return out
-            finally:
-                conn.close()
+            return execute_use_case(
+                operation_name="processar_sazonalidade_operacional",
+                use_case_class=ProcessarSazonalidadeOperacional,
+                correlation_id=body.correlation_id,
+                request_payload=body.model_dump(mode="json"),
+                repository_factories={
+                    "sinal_repo": PostgresSinalExternoRepository,
+                    "politica_repo": PostgresPoliticaReposicaoRepository,
+                },
+                execute_fn=lambda uc: lambda: asdict(uc.execute(data)),
+            )
 
         use_case = ProcessarSazonalidadeOperacional(
             _inmemory_estoque,
@@ -1212,22 +1205,14 @@ def processar_governanca_orcamentaria(body: OrcamentoSimulacaoRequest) -> dict:
     )
     try:
         if API_BACKEND == "postgres":
-            conn = get_connection_postgres()
-            try:
-                orcamento_repo = PostgresOrcamentoRepository(conn)
-                publisher = PostgresEventStore(conn, tenant_id=TENANT_ID)
-                use_case = ProcessarGovernancaOrcamentaria(orcamento_repo, publisher)
-                with postgres_transaction(conn):
-                    out = _execute_postgres_with_idempotency(
-                        connection=conn,
-                        operation_name="processar_governanca_orcamentaria",
-                        correlation_id=data.correlation_id,
-                        request_payload=body.model_dump(mode="json"),
-                        execute=lambda: asdict(use_case.execute(data)),
-                    )
-                return out
-            finally:
-                conn.close()
+            return execute_use_case(
+                operation_name="processar_governanca_orcamentaria",
+                use_case_class=ProcessarGovernancaOrcamentaria,
+                correlation_id=body.correlation_id,
+                request_payload=body.model_dump(mode="json"),
+                repository_factories={"orcamento_repo": PostgresOrcamentoRepository},
+                execute_fn=lambda uc: lambda: asdict(uc.execute(data)),
+            )
 
         use_case = ProcessarGovernancaOrcamentaria(
             _inmemory_orcamento,
