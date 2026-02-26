@@ -1,5 +1,7 @@
 # Endpoints Sem Jargão
 
+> Atualizado em 26/02/2026.
+
 ## O que é endpoint?
 
 Pense em endpoint como um "botão remoto" do sistema.
@@ -103,6 +105,24 @@ Resumo simples do comportamento:
 - registra aporte externo e sua rastreabilidade;
 - atualiza consumo em `orcamento_periodo` e `orcamento_categoria`.
 
+## Endpoints XML (trilha dedicada)
+
+## `POST /wms/v1/xml/analisar`
+
+Ação de negócio: ler XML da NF-e sem mexer no saldo.
+
+## `POST /wms/v1/xml/validar`
+
+Ação de negócio: validação rápida da estrutura XML.
+
+## `POST /wms/v1/xml/confirmar`
+
+Ação de negócio: confirmar importação e efetivar estoque.
+
+## `GET /wms/v1/xml/historico/{tenant_id}`
+
+Ação de negócio: consultar histórico de importações XML.
+
 ## Por que isso importa para negócio?
 
 Porque o PDV ou qualquer outro sistema pode usar o WMS sem mexer no banco.
@@ -117,6 +137,11 @@ No backend PostgreSQL, os endpoints de escrita têm proteção de repetição:
 - mesma rota + mesmo `correlation_id` + conteúdo diferente: o WMS bloqueia com `409` (conflito).
 
 Na prática: se o PDV reenviar por falha de rede, o saldo não fica duplicado.
+
+Observação prática:
+
+- no núcleo `/v1/...`, use sempre `correlation_id`;
+- para integração rápida, o SDK já cobre esses endpoints (`sdk/README.md`).
 
 ## Erro 409: o que significa e o que fazer
 

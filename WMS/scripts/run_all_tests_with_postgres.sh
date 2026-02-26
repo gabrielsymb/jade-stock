@@ -9,6 +9,8 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 cd "$(dirname "$0")/.."
+PROJECT_DIR="$(pwd)"
+SCHEMA_CORE_PATH="$PROJECT_DIR/../Database/schema_core.sql"
 
 echo -e "${BLUE}🚀 Iniciando suite completa de testes com PostgreSQL...${NC}"
 
@@ -54,10 +56,11 @@ fi
 
 # 4. Aplicar schema do banco (se necessário)
 echo -e "${BLUE}🗄️ Aplicando schema do banco...${NC}"
-if [[ -f "Database/schema_core.sql" ]]; then
+if [[ -f "$SCHEMA_CORE_PATH" ]]; then
   python3 -c "
 import psycopg2
 import os
+from pathlib import Path
 
 dsn = os.getenv('WMS_POSTGRES_DSN')
 try:
@@ -73,7 +76,7 @@ try:
     
     if not tables_exist:
         print('📝 Aplicando schema_core.sql...')
-        with open('Database/schema_core.sql', 'r') as f:
+        with open(Path('$SCHEMA_CORE_PATH'), 'r', encoding='utf-8') as f:
             cursor.execute(f.read())
         conn.commit()
         print('✅ Schema aplicado com sucesso')
@@ -86,7 +89,7 @@ except Exception as e:
     exit(1)
 "
 else
-  echo -e "${YELLOW}⚠️ Arquivo Database/schema_core.sql não encontrado${NC}"
+  echo -e "${YELLOW}⚠️ Arquivo $SCHEMA_CORE_PATH não encontrado${NC}"
 fi
 
 # 5. Rodar testes unitários (in-memory)

@@ -35,9 +35,7 @@ class PostgresCoreIntegrationTestCase(unittest.TestCase):
             cursor.execute(f"CREATE SCHEMA {cls.schema_name}")
             cursor.execute(f"SET search_path TO {cls.schema_name}, public")
 
-            schema_sql = Path("../Database/schema_core.sql")
-            if not schema_sql.exists():
-                schema_sql = Path("Database/schema_core.sql")
+            schema_sql = Path(__file__).resolve().parents[2] / "Database/schema_core.sql"
             sql_text = schema_sql.read_text(encoding="utf-8")
             cursor.execute(sql_text)
 

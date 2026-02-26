@@ -10,6 +10,8 @@ PURPLE='\033[0;35m'
 NC='\033[0m' # No Color
 
 cd "$(dirname "$0")/.."
+PROJECT_DIR="$(pwd)"
+SCHEMA_CORE_PATH="$PROJECT_DIR/../Database/schema_core.sql"
 
 echo -e "${PURPLE}🚪 JADE STOCK - RELEASE GATE ENHANCED${NC}"
 echo -e "${PURPLE}=====================================${NC}"
@@ -51,7 +53,7 @@ essential_files=(
     "wms/interfaces/api/app.py"
     "wms/domain/exceptions.py"
     "wms/infrastructure/database/database_config.py"
-    "Database/schema_core.sql"
+    "$SCHEMA_CORE_PATH"
     "requirements.txt"
     "requirements-dev.txt"
 )
@@ -114,12 +116,8 @@ echo -e "${YELLOW}🐘 Conexão PostgreSQL${NC}"
 if python3 -c "
 import psycopg2
 import os
-try:
-    conn = psycopg2.connect(os.getenv('WMS_POSTGRES_DSN'))
-    conn.close()
-    print('OK')
-except:
-    print('FAIL')
+conn = psycopg2.connect(os.getenv('WMS_POSTGRES_DSN'))
+conn.close()
 " 2>/dev/null; then
     echo -e "${GREEN}   ✅ PostgreSQL conectado${NC}"
     postgres_available=true

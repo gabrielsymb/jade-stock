@@ -9,6 +9,8 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 cd "$(dirname "$0")/.."
+PROJECT_DIR="$(pwd)"
+SCHEMA_CORE_PATH="$PROJECT_DIR/../Database/schema_core.sql"
 
 echo -e "${BLUE}🐘 Setup PostgreSQL para Testes do Jade Stock${NC}"
 echo -e "${BLUE}=============================================${NC}"
@@ -69,16 +71,16 @@ fi
 
 # 6. Aplicar schema
 echo -e "${YELLOW}🗄️ Aplicando schema do banco...${NC}"
-if [[ -f "Database/schema_core.sql" ]]; then
+if [[ -f "$SCHEMA_CORE_PATH" ]]; then
   # Copiar schema para dentro do container
-  docker compose -f docker-compose.postgres.yml cp Database/schema_core.sql postgres:/tmp/schema_core.sql
+  docker compose -f docker-compose.postgres.yml cp "$SCHEMA_CORE_PATH" postgres:/tmp/schema_core.sql
   
   # Aplicar schema
   docker compose -f docker-compose.postgres.yml exec -T postgres psql -U wms -d wms -f /tmp/schema_core.sql
   
   echo -e "${GREEN}✅ Schema aplicado com sucesso${NC}"
 else
-  echo -e "${YELLOW}⚠️ Arquivo Database/schema_core.sql não encontrado${NC}"
+  echo -e "${YELLOW}⚠️ Arquivo $SCHEMA_CORE_PATH não encontrado${NC}"
 fi
 
 # 7. Verificar tabelas

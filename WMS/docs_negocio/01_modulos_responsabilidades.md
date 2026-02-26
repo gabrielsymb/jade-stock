@@ -2,6 +2,8 @@
 
 Este arquivo agora também mostra **onde cada coisa está no projeto**.
 
+> Atualizado em 26/02/2026 para refletir API em produção local e trilha XML dedicada.
+
 ## 1) Cadastro
 
 Responsável por identificar corretamente o produto:
@@ -103,8 +105,10 @@ Responsável por permitir que outros sistemas (como PDV) usem essas funções se
 Arquivos principais:
 
 - API principal: `WMS/wms/interfaces/api/app.py`
+- API XML dedicada: `WMS/wms/interfaces/api_xml_analise.py` e `WMS/wms/interfaces/api_xml_confirmacao.py`
 - Guia da API: `WMS/wms/interfaces/api/README.md`
 - Runner da API: `WMS/scripts/run_api.sh`
+- SDK de consumo: `sdk/README.md`
 
 ## 8) Banco de dados
 

@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jadestock-sdk"
+version = "0.1.0"
+description = "SDK Python para a API Jade-stock"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+  { name = "Jade-stock" }
+]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "License :: Other/Proprietary License",
+  "Operating System :: OS Independent"
+]
+
+[tool.setuptools]
+packages = ["jadestock_sdk"]

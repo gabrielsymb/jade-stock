@@ -7,6 +7,7 @@
 
 ## ÍNDICE COMPLETO
 
+0. [Guia de Leitura e Mapa de Documentos](#0-guia-de-leitura-e-mapa-de-documentos)
 1. [Visão Geral e Filosofia](#1-visão-geral-e-filosofia)
 2. [Arquitetura Técnica](#2-arquitetura-técnica)
 3. [Módulos do Sistema](#3-módulos-do-sistema)
@@ -20,6 +21,23 @@
 11. [Regras de Negócio](#11-regras-de-negócio)
 12. [Roadmap e Evolução](#12-roadmap-e-evolução)
 13. [Guia de Sobrevivência](#13-guia-de-sobrevivência)
+
+---
+
+## 0. GUIA DE LEITURA E MAPA DE DOCUMENTOS
+
+Para facilitar onboarding de novos desenvolvedores, este e o mapa oficial de leitura:
+
+| Documento | Papel | Quando consultar |
+| :---- | :---- | :---- |
+| [README.md](./README.md) | Portal inicial do projeto | Primeiro acesso ao repositório |
+| [WMS/README.md](./WMS/README.md) | Operação real do módulo ativo | Implementação, testes e deploy do dia a dia |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | Regras de contribuição | Antes de abrir PR/commit |
+| [DOCS_BOAS_PRACTICES.md](./DOCS_BOAS_PRACTICES.md) | Padrão de documentação | Ao criar/editar documentação |
+| [guia_de_estruture.md](./guia_de_estruture.md) | Estrutura de diretórios | Ao organizar novos módulos/pastas |
+| [jade-stock-adendos.docx.md](./jade-stock-adendos.docx.md) | Evoluções e adendos | Funcionalidades em evolução e roadmap |
+
+**Regra operacional (26/02/2026):** módulos futuros (`Contábil`, `PDV`, `IA`) devem permanecer na documentação até existir implementação mínima versionável (código + testes + README do módulo), evitando pastas placeholder no repositório.
 
 ---
 
@@ -61,7 +79,7 @@ Projetado para **1-2 desenvolvedores** mantendo robustez empresarial.
 - Isolamento de falhas e reinício independente
 
 **Portas Padrão**:
-- WMS: 8001
+- WMS: 8000 (default local no `run_api.sh`, configurável)
 - Contábil: 8002
 - IA: 8003
 - PDV: 8004
@@ -158,6 +176,8 @@ WMS/
 
 **Status**: Documentado nos adendos
 
+**Estado de código (26/02/2026)**: sem módulo ativo no filesystem raiz; implementação permanece planejada para evitar acúmulo de pastas vazias/placeholder.
+
 **Responsabilidades**:
 - Frente de caixa
 - Registro de vendas
@@ -211,7 +231,7 @@ kanban_politica, orcamento_periodo
 **Comando de Deploy**:
 ```bash
 cd WMS
-./scripts/release_gate.sh
+./scripts/release_gate_enhanced.sh
 ```
 
 #### Pipeline Profissional Detalhado
@@ -279,6 +299,8 @@ Cada microserviço implementa verificação de dependências críticas:
 
 ### 5.2 Endpoints WMS v1
 
+**Nota de escopo (26/02/2026):** o núcleo estável da API está em `wms/interfaces/api/app.py` (rotas `/v1/...`). O fluxo XML está em rota dedicada/experimental (`/wms/v1/xml/...`) e pode evoluir separadamente.
+
 **Movimentação**:
 - `POST /v1/movimentacoes` - Registrar movimentação
 - `POST /v1/ajustes` - Ajustes de estoque
@@ -286,8 +308,8 @@ Cada microserviço implementa verificação de dependências críticas:
 
 **Recebimento**:
 - `POST /v1/recebimentos` - Conferência de recebimento
-- `POST /v1/recebimentos/xml/analisar` - Análise de NF-e XML
-- `POST /v1/recebimentos/xml/confirmar` - Confirmação de importação
+- `POST /wms/v1/xml/analisar` - Análise de NF-e XML (trilha dedicada)
+- `POST /wms/v1/xml/confirmar` - Confirmação de importação (trilha dedicada)
 
 **Inventário**:
 - `POST /v1/inventarios/ciclico` - Contagem cíclica
@@ -1074,10 +1096,10 @@ docker compose -f docker-compose.postgres.yml --env-file .env up -d
 
 | Comando | Propósito |
 |---------|----------|
-| `./scripts/release_gate.sh` | Validação completa pré-deploy |
+| `./scripts/release_gate_enhanced.sh` | Validação completa pré-deploy |
 | `./scripts/run_api.sh` | Sobe API local |
 | `./scripts/run_sql_tests.sh` | Testes com PostgreSQL |
-| `python3 -m unittest discover` | Todos os testes |
+| `pytest -q -rs` | Suite principal de testes |
 
 ### 13.6 Mapa Mental do Sistema
 

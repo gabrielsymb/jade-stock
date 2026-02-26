@@ -1,110 +1,120 @@
-# SDK Jade-stock (unificado)
+# SDK Jade-stock
 
-SDK unica na raiz do monorepo para integracao de terceiros com as APIs Jade-stock.
+SDK Python unificada para consumir a API Jade-stock com foco em uso rapido.
 
-Estado atual:
-- `WMS`: implementado (cliente completo para rotas v1 mapeadas no projeto).
-- `IA`: placeholder.
-- `Contabil`: placeholder.
+## Estado atual
 
-## Uso rapido
+- `JadeStockClient` (WMS core): pronto.
+- Trilha XML (`/wms/v1/xml/...`): mapeada no cliente.
+- `IAClient` e `ContabilClient`: placeholders de evolucao.
+
+## Instalacao (plug-and-play)
+
+```bash
+cd Jade-stock
+source .venv/bin/activate
+pip install -e ./sdk
+```
+
+## Quickstart
 
 ```python
 from jadestock_sdk import JadeStockClient
 
-client = JadeStockClient(
-    base_url="http://127.0.0.1:8000",
-    timeout_seconds=10.0,
-)
-
+client = JadeStockClient(base_url="http://127.0.0.1:8000", auto_correlation_id=True)
 print(client.health())
 
-print(
-    client.registrar_movimentacao(
-        {
-            "sku_id": "SKU-COCA-350",
-            "tipo_movimentacao": "entrada",
-            "quantidade": 10,
-            "endereco_origem": None,
-            "endereco_destino": "DEP-A-01",
-            "operador": "op_01",
-            "correlation_id": "corr_sdk_001",
-            "motivo": "Carga inicial",
-        }
-    )
+resp = client.movimentacao_entrada(
+    sku_id="sku_001",
+    quantidade=10,
+    endereco_destino="DEP-A-01",
+    operador="op_01",
 )
+print(resp)
 ```
 
-## Idempotencia (recomendado)
+## Configuracao por ambiente
 
-Para qualquer `POST`, envie sempre `correlation_id` unico por operacao.
-
-Alternativa: gerar automatico pela SDK.
+```bash
+export JADESTOCK_BASE_URL="http://127.0.0.1:8000"
+export JADESTOCK_AUTO_CORRELATION_ID="true"
+export JADESTOCK_RETRIES="2"
+```
 
 ```python
 from jadestock_sdk import JadeStockClient
 
-client = JadeStockClient(
-    base_url="http://127.0.0.1:8000",
-    auto_correlation_id=True,
-)
+client = JadeStockClient.from_env()
+print(client.health())
 ```
 
-Ou gerar manualmente:
+Variaveis suportadas:
+
+- `JADESTOCK_BASE_URL`
+- `JADESTOCK_TIMEOUT_SECONDS`
+- `JADESTOCK_BEARER_TOKEN`
+- `JADESTOCK_RETRIES`
+- `JADESTOCK_RETRY_BACKOFF_SECONDS`
+- `JADESTOCK_AUTO_CORRELATION_ID`
+
+## Metodos principais (WMS core)
+
+- `health()`
+- `registrar_movimentacao(payload)`
+- `registrar_ajuste(payload)`
+- `registrar_avaria(payload)`
+- `registrar_recebimento(payload)`
+- `registrar_inventario_ciclico(payload)`
+- `registrar_politica_kanban(payload)`
+- `processar_curva_abcd(payload)`
+- `processar_giro(payload)`
+- `processar_sazonalidade(payload)`
+- `simular_orcamento(payload)`
+
+## Helpers anti-boilerplate
+
+- `movimentacao_entrada(...)`
+- `movimentacao_saida(...)`
+- `movimentacao_transferencia(...)`
+
+Esses helpers ja montam o payload base e geram `correlation_id` quando nao informado.
+
+## Trilha XML dedicada
+
+- `analisar_xml(payload)`
+- `validar_xml(payload)`
+- `confirmar_xml(payload)`
+- `historico_importacoes(tenant_id, ...)`
+- `estatisticas_importacoes(tenant_id, dias=30)`
+- `verificar_status_nfe(tenant_id, chave_acesso)`
+
+Exemplo:
 
 ```python
-from jadestock_sdk import new_correlation_id
+xml_payload = {
+    "tenant_id": "8a3f9a8d-7a3c-4f79-b3d1-33f9ed9e7c10",
+    "xml_content": "<nfeProc>...</nfeProc>",
+}
 
-corr = new_correlation_id()
+analise = client.analisar_xml(xml_payload)
+print(analise)
 ```
 
-## Retries para falha de rede
+## Tratamento de erros
 
-Retries da SDK cobrem indisponibilidade de rede (`URLError`), com backoff linear.
+Erros HTTP/rede levantam `JadeStockSDKError` com:
 
-```python
-client = JadeStockClient(
-    base_url="http://127.0.0.1:8000",
-    retries=2,
-    retry_backoff_seconds=0.3,
-)
-```
-
-## Contrato de erro
-
-Erros HTTP e de conectividade levantam `JadeStockSDKError`:
 - `status_code`
 - `code`
 - `message`
 - `details`
 - `correlation_id`
 
-Exemplo:
-
 ```python
 from jadestock_sdk import JadeStockClient, JadeStockSDKError
 
-client = JadeStockClient(base_url="http://127.0.0.1:8000")
-
 try:
-    client.registrar_movimentacao({...})
+    client.registrar_movimentacao({"sku_id": "x"})
 except JadeStockSDKError as exc:
     print(exc.status_code, exc.code, exc.message)
 ```
-
-## Observacao sobre autenticacao
-
-A SDK aceita token bearer quando a API exigir auth:
-
-```python
-client = JadeStockClient(
-    base_url="http://127.0.0.1:8000",
-    bearer_token="SEU_TOKEN",
-)
-client.set_bearer_token("TOKEN_ATUALIZADO")
-```
-
-## Roadmap
-
-- `IAClient`: previsao de demanda e recomendacao operacional.
-- `ContabilClient`: lancamentos, conciliacao e DRE.

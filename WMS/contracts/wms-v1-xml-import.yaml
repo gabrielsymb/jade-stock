@@ -1,0 +1,450 @@
+openapi: 3.1.0
+info:
+  title: Jade-Stock WMS API - XML Import
+  description: Módulo WMS para importação de NF-e via XML com vinculação inteligente de produtos
+  version: 1.0.0
+  contact:
+    name: Jade-Stock Development Team
+
+servers:
+  - url: http://localhost:8001
+    description: Ambiente de desenvolvimento
+
+paths:
+  /wms/v1/recebimentos/xml/analisar:
+    post:
+      summary: Analisar arquivo XML de NF-e
+      description: |
+        Faz upload do XML e retorna análise completa:
+        - Itens parseados do XML
+        - Sugestões de vinculação automática
+        - Alertas e ambiguidades
+        - Status de cada item (MATCHED/AMBIGUOUS/NEW)
+        
+        **Nenhuma alteração de saldo é realizada nesta etapa.**
+      operationId: analisarXmlNfe
+      tags:
+        - XML Import
+      
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - arquivo_xml
+              properties:
+                arquivo_xml:
+                  type: string
+                  format: binary
+                  description: Arquivo XML da NF-e (máximo 5MB)
+                tenant_id:
+                  type: string
+                  description: ID do tenant (opcional, obtido do token)
+      
+      responses:
+        '200':
+          description: XML analisado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/XmlAnaliseResponse'
+        
+        '400':
+          description: Requisição inválida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        
+        '422':
+          description: XML malformado ou inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        
+        '409':
+          description: NF-e já importada anteriormente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /wms/v1/recebimentos/xml/confirmar:
+    post:
+      summary: Confirmar importação da NF-e
+      description: |
+        Confirma a importação com as decisões do operador.
+        Executa atomicamente:
+        - Atualização de saldos
+        - Emissão de eventos na Event Store
+        - Arquivamento do XML original
+        - Registro de avarias (se houver)
+        
+        Requer Idempotency-Key para prevenir duplicações.
+      operationId: confirmarXmlNfe
+      tags:
+        - XML Import
+      
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: Chave de idempotência (UUID v4)
+          schema:
+            type: string
+            format: uuid
+      
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/XmlConfirmacaoRequest'
+      
+      responses:
+        '200':
+          description: Importação confirmada com sucesso (idempotente)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/XmlConfirmacaoResponse'
+        
+        '201':
+          description: Importação confirmada com sucesso (nova operação)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/XmlConfirmacaoResponse'
+        
+        '400':
+          description: Requisição inválida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        
+        '409':
+          description: Violação de idempotência
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /wms/v1/recebimentos/{id}/xml:
+    get:
+      summary: Recuperar XML original arquivado
+      description: Retorna o arquivo XML original vinculado a um recebimento
+      operationId: recuperarXmlRecebimento
+      tags:
+        - XML Import
+      
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID do recebimento
+          schema:
+            type: string
+            format: uuid
+      
+      responses:
+        '200':
+          description: XML recuperado com sucesso
+          content:
+            application/xml:
+              schema:
+                type: string
+                description: Conteúdo do arquivo XML da NF-e
+        
+        '404':
+          description: Recebimento não encontrado ou XML não disponível
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    XmlAnaliseResponse:
+      type: object
+      required:
+        - status
+        - chave_acesso
+        - emitente
+        - itens
+      properties:
+        status:
+          type: string
+          enum: [analise_completa]
+          description: Status da análise
+        chave_acesso:
+          type: string
+          description: Chave de acesso da NF-e
+        emitente:
+          $ref: '#/components/schemas/EmitenteInfo'
+        itens:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemAnalise'
+        alertas:
+          type: array
+          items:
+            type: string
+          description: Alertas encontrados durante análise
+    
+    EmitenteInfo:
+      type: object
+      required:
+        - cnpj
+        - razao_social
+      properties:
+        cnpj:
+          type: string
+          description: CNPJ do emitente
+        razao_social:
+          type: string
+          description: Razão social do emitente
+        nome_fantasia:
+          type: string
+          description: Nome fantasia (opcional)
+    
+    ItemAnalise:
+      type: object
+      required:
+        - item_id
+        - codigo_fornecedor
+        - descricao
+        - quantidade
+        - unidade
+        - valor_unitario
+        - status_vinculacao
+      properties:
+        item_id:
+          type: string
+          description: ID único do item na análise
+        codigo_fornecedor:
+          type: string
+          description: Código do produto no sistema do fornecedor
+        descricao:
+          type: string
+          description: Descrição do produto na NF-e
+        gtin:
+          type: string
+          description: Código de barras EAN/GTIN
+        ncm:
+          type: string
+          description: Código NCM
+        quantidade:
+          type: number
+          format: decimal
+          description: Quantidade comercial
+        unidade:
+          type: string
+          description: Unidade comercial (UN, CX, KG, etc)
+        valor_unitario:
+          type: number
+          format: decimal
+          description: Valor unitário
+        status_vinculacao:
+          type: string
+          enum: [MATCHED, AMBIGUOUS, NEW]
+          description: Status da vinculação automática
+        pontuacao_vinculacao:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Pontuação de confiança (0-100)
+        candidatos_vinculacao:
+          type: array
+          items:
+            $ref: '#/components/schemas/CandidatoVinculacao'
+          description: Candidatos sugeridos (para AMBIGUOUS)
+        quantidade_avariada:
+          type: number
+          format: decimal
+          minimum: 0
+          description: Quantidade avariada (padrão: 0)
+    
+    CandidatoVinculacao:
+      type: object
+      required:
+        - produto_id
+        - nome
+        - pontuacao
+      properties:
+        produto_id:
+          type: string
+          format: uuid
+          description: ID interno do produto candidato
+        nome:
+          type: string
+          description: Nome do produto interno
+        pontuacao:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Pontuação de correspondência
+        criterios:
+          type: object
+          properties:
+            ean:
+              type: number
+              minimum: 0
+              maximum: 40
+              description: Pontuação EAN/GTIN (0-40)
+            ncm:
+              type: number
+              minimum: 0
+              maximum: 20
+              description: Pontuação NCM (0-20)
+            descricao:
+              type: number
+              minimum: 0
+              maximum: 30
+              description: Pontuação similaridade descrição (0-30)
+            historico:
+              type: number
+              minimum: 0
+              maximum: 10
+              description: Pontuação histórico fornecedor (0-10)
+    
+    XmlConfirmacaoRequest:
+      type: object
+      required:
+        - chave_acesso
+        - itens
+      properties:
+        chave_acesso:
+          type: string
+          description: Chave de acesso da NF-e
+        itens:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemConfirmacao'
+        endereco_destino_padrao:
+          type: string
+          description: Endereço padrão para itens sem destino específico
+    
+    ItemConfirmacao:
+      type: object
+      required:
+        - item_id
+        - produto_id
+        - quantidade_total
+        - quantidade_avariada
+        - endereco_destino
+      properties:
+        item_id:
+          type: string
+          description: ID do item da análise
+        produto_id:
+          type: string
+          format: uuid
+          description: ID do produto interno vinculado
+        quantidade_total:
+          type: number
+          format: decimal
+          description: Quantidade total da NF-e
+        quantidade_avariada:
+          type: number
+          format: decimal
+          minimum: 0
+          description: Quantidade avariada
+        endereco_destino:
+          type: string
+          description: Endereço de destino no WMS
+        criar_vinculo_permanente:
+          type: boolean
+          description: Criar vínculo permanente para aprendizado
+    
+    XmlConfirmacaoResponse:
+      type: object
+      required:
+        - recebimento_id
+        - status
+        - itens_processados
+      properties:
+        recebimento_id:
+          type: string
+          format: uuid
+          description: ID do recebimento criado
+        status:
+          type: string
+          enum: [confirmado, idempotente]
+          description: Status da operação
+        itens_processados:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemProcessado'
+        eventos_gerados:
+          type: array
+          items:
+            type: string
+          description: Lista de eventos emitidos
+    
+    ItemProcessado:
+      type: object
+      required:
+        - item_id
+        - produto_id
+        - quantidade_recebida
+        - quantidade_avariada
+        - endereco_destino
+      properties:
+        item_id:
+          type: string
+          description: ID do item processado
+        produto_id:
+          type: string
+          format: uuid
+          description: ID do produto interno
+        quantidade_recebida:
+          type: number
+          format: decimal
+          description: Quantidade adicionada ao estoque
+        quantidade_avariada:
+          type: number
+          format: decimal
+          description: Quantidade movida para avarias
+        endereco_destino:
+          type: string
+          description: Endereço onde foi armazenado
+        vinculo_criado:
+          type: boolean
+          description: Indica se vínculo permanente foi criado
+    
+    ErrorResponse:
+      type: object
+      required:
+        - status_code
+        - code
+        - message
+        - correlation_id
+      properties:
+        status_code:
+          type: integer
+          description: HTTP status code
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Human readable error message
+        details:
+          type: object
+          description: Additional error details
+        correlation_id:
+          type: string
+          description: Correlation ID for tracking
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []

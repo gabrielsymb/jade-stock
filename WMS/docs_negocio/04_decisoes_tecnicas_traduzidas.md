@@ -40,10 +40,11 @@ Analogia: evitar cobrança duplicada no cartão quando você clica duas vezes.
 
 No WMS, significa evitar processar a mesma operação duas vezes sem querer.
 
-No estado atual:
+No estado atual (núcleo WMS em PostgreSQL):
 
-- recebimento já possui proteção por `nota_fiscal + correlation_id`;
-- esse padrão será expandido para outros fluxos nas próximas fases.
+- endpoints de escrita do core usam `correlation_id` para evitar duplicidade acidental;
+- retry com mesmo payload retorna o mesmo resultado;
+- mesmo `correlation_id` com payload diferente retorna `409` (conflito).
 
 ## Transação e rollback
 

@@ -36,14 +36,10 @@ class PostgresGiroIntegrationTestCase(unittest.TestCase):
             cursor.execute(f"CREATE SCHEMA {cls.schema_name}")
             cursor.execute(f"SET search_path TO {cls.schema_name}, public")
 
-            schema_core = Path("../Database/schema_core.sql")
-            if not schema_core.exists():
-                schema_core = Path("Database/schema_core.sql")
+            schema_core = Path(__file__).resolve().parents[2] / "Database/schema_core.sql"
             cursor.execute(schema_core.read_text(encoding="utf-8"))
 
-            schema_extended = Path("../Database/schema_extended.sql")
-            if not schema_extended.exists():
-                schema_extended = Path("Database/schema_extended.sql")
+            schema_extended = Path(__file__).resolve().parents[2] / "Database/schema_extended.sql"
             cursor.execute(schema_extended.read_text(encoding="utf-8"))
 
     @classmethod

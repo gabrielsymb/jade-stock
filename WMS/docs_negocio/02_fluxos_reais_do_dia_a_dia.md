@@ -40,6 +40,18 @@ Exemplo: entrada de nota fiscal.
 
 Resultado: entrada controlada e divergências visíveis.
 
+## Fluxo D: Importar NF-e XML (trilha dedicada)
+
+Exemplo: fornecedor envia XML e o operador confirma a entrada.
+
+1. Operador envia o conteúdo XML para `POST /wms/v1/xml/analisar`.
+2. Sistema valida estrutura e classifica itens (`MATCHED`, `AMBIGUOUS`, `NEW`).
+3. Operador revisa e decide confirmações.
+4. Operador confirma em `POST /wms/v1/xml/confirmar`.
+5. Sistema atualiza estoque e registra histórico da importação.
+
+Resultado: recebimento por XML com rastreabilidade e controle de duplicidade.
+
 ## Conexão com suas regras de negócio
 
 Cada fluxo acima foi implementado para refletir diretamente:

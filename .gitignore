@@ -1,9 +1,11 @@
 # Projeto (venv local na raiz)
 .venv/
+WMS/venv/
 
 # Python cache
 __pycache__/
 *.py[cod]
+*.egg-info/
 
 # Artefatos locais / backup
 *.zip

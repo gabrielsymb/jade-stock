@@ -1,7 +1,7 @@
 """SDK oficial do Jade-stock.
 
 Modulos:
-- WMS: pronto para uso
+- WMS core + trilha XML dedicada: pronto para uso
 - IA: placeholder para proxima fase
 - Contabil: placeholder para proxima fase
 """

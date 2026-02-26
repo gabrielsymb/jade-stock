@@ -2,9 +2,11 @@
 
 Adendos à Documentação Técnica
 
-Seção 11 — WMS: Importação de NF-e via XML   ·   Seção 12 — API PDV: Frente de Caixa
+Seção 11 — WMS: Importação de NF-e via XML   ·   Seção 12 — API PDV: Frente de Caixa   ·   Seção 13 — WMS: Gestão Inteligente de Múltiplos Fornecedores e Aprendizado Contínuo
 
-v1.1  —  Complemento à Documentação Técnica v1.0
+v1.2  —  Complemento à Documentação Técnica v1.0
+
+> **Nota de estado atual (26/02/2026):** este arquivo concentra adendos arquiteturais e trilhas em evolução. O núcleo estável da API WMS para operação diária está em `WMS/wms/interfaces/api/app.py` e `WMS/README.md`. Endpoints XML/PDV descritos aqui devem ser tratados como extensão progressiva.
 
 # **11\. Adendo WMS — Importação de NF-e via XML**
 
@@ -25,8 +27,8 @@ A importação segue o mesmo padrão de semântica HTTP definido para todos os e
 
 | Método | Endpoint | Descrição |
 | :---- | :---- | :---- |
-| **POST** | /wms/v1/recebimentos/xml/analisar | Faz upload do XML e retorna análise: itens parseados, sugestões de vinculação e alertas. Não altera saldo. |
-| **POST** | /wms/v1/recebimentos/xml/confirmar | Confirma a importação com as decisões do operador (vínculos, avarias). Altera saldo e emite eventos. |
+| **POST** | /wms/v1/xml/analisar | Faz upload do XML e retorna análise: itens parseados, sugestões de vinculação e alertas. Não altera saldo. |
+| **POST** | /wms/v1/xml/confirmar | Confirma a importação com as decisões do operador (vínculos, avarias). Altera saldo e emite eventos. |
 | **GET** | /wms/v1/recebimentos/{id}/xml | Recupera o XML original arquivado vinculado a um recebimento. |
 
 **Etapa 1 — Análise (\`/analisar\`):** O endpoint recebe o arquivo XML via multipart/form-data. O sistema parseia o arquivo, identifica os itens da nota (cEAN, xProd, NCM, CFOP, qCom, vUnCom) e executa o algoritmo de vinculação de produtos descrito na seção 11.4. O retorno é um objeto de análise completo que o front-end usa para renderizar a tela de revisão. **Nenhum saldo é alterado nesta etapa.** O status 200 indica que o XML foi parseado com sucesso — não que o recebimento foi registrado.
@@ -137,7 +139,7 @@ O módulo de Ponto de Venda (PDV) é o quarto domínio do Jade-stock — ao lado
 
 O PDV segue os mesmos princípios arquiteturais dos módulos existentes:
 
-* **API RESTful local:** exposta em porta dedicada (ex.: 8004), comunicando-se via localhost com o WMS (porta 8001\) e com a Event Store.
+* **API RESTful local:** exposta em porta dedicada (ex.: 8004), comunicando-se via localhost com o WMS (porta 8000 por padrão local, configurável) e com a Event Store.
 
 * **Schema próprio no PostgreSQL:** pdv, com permissões restritas. O módulo WMS não tem acesso ao schema pdv; o PDV acessa o WMS exclusivamente via SDK, nunca via query direta.
 
@@ -282,3 +284,289 @@ A arquitetura do PDV foi desenhada para crescer em fases sem reescrita. As evolu
 * **Fase 4 — IA de precificação:** O módulo IA, ao acumular histórico de vendas do PDV via Event Store, pode sugerir ajustes de preço por sazonalidade, giro e margem — consumindo os mesmos eventos sem qualquer alteração no PDV.
 
 Jade-stock — Adendos à Documentação Técnica v1.1 — 2026
+
+# **13\. Adendo WMS — Gestão Inteligente de Múltiplos Fornecedores e Aprendizado Contínuo**
+
+"O sistema que aprende com a operação, não o contrário."
+
+## **13.1 O Desafio da Cadeia de Suprimentos Flexível**
+
+Na operação real de um armazém, um mesmo produto pode ser adquirido de diferentes fornecedores ao longo do tempo. O cenário é comum: a Ambev (distribuidor primário) eventualmente não consegue entregar, e o comprador recorre a um distribuidor intermediário que possui o mesmo produto em estoque.
+
+O problema técnico que surge é: como o sistema trata o mesmo produto físico quando ele chega com identificadores (códigos de fornecedor) completamente diferentes?
+
+| PRINCÍPIO DE DESIGN O estoque é cego quanto à origem. O produto físico na prateleira é o mesmo, independentemente de ter sido comprado da Ambev ou de um distribuidor local. O sistema deve refletir essa realidade: estoque unificado, rastreabilidade preservada, aprendizado contínuo sobre como cada fornecedor identifica cada produto. |
+| :---- |
+
+### **13.1.1 Modelo de Dados: Tabela de Vínculos Fornecedor-Produto**
+
+A solução para o dilema dos múltiplos fornecedores é uma tabela de relacionamento N-para-N (muitos para muitos) que atua como um tradutor oficial entre o mundo externo (fornecedores) e o mundo interno (seu catálogo).
+
+```sql
+-- Schema: wms
+-- Tabela: vinculo_fornecedor_produto
+
+CREATE TABLE vinculo_fornecedor_produto (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenant(id),
+    fornecedor_id UUID NOT NULL REFERENCES fornecedor(id),
+    codigo_fornecedor VARCHAR(100) NOT NULL,  -- Código do produto no sistema do fornecedor
+    produto_id_interno UUID NOT NULL REFERENCES produto(id),
+    fator_conversao DECIMAL(10,4) NOT NULL DEFAULT 1.0,  -- Multiplicador de unidades
+    unidade_origem VARCHAR(10),  -- Unidade usada pelo fornecedor (CX, FD, PCT)
+    unidade_destino VARCHAR(10), -- Sua unidade interna (UN, KG)
+    
+    -- Metadados de auditoria e aprendizado
+    criado_em TIMESTAMP DEFAULT NOW(),
+    atualizado_em TIMESTAMP DEFAULT NOW(),
+    ultima_importacao TIMESTAMP,
+    criado_por UUID REFERENCES usuario(id),
+    
+    -- Aprendizado: contador de uso para estatísticas
+    vezes_utilizado INTEGER DEFAULT 0,
+    
+    -- Garantias de integridade
+    UNIQUE(tenant_id, fornecedor_id, codigo_fornecedor),  -- Um código por fornecedor só pode apontar para UM produto interno
+    CONSTRAINT fator_positivo CHECK (fator_conversao > 0)
+);
+
+-- Índices para performance nas consultas de importação
+CREATE INDEX idx_vinculo_fornecedor ON vinculo_fornecedor_produto(fornecedor_id, codigo_fornecedor);
+CREATE INDEX idx_vinculo_produto ON vinculo_fornecedor_produto(produto_id_interno);
+```
+
+**Por que uma tabela separada é a escolha correta?**
+
+| Abordagem | Problema | Solução Jade-stock |
+| :---- | :---- | :---- |
+| Embutir no cadastro do produto | Um produto teria campos fixos para "código Ambev", "código Distribuidor X" — explode conforme novos fornecedores surgem | Tabela de vínculos permite N fornecedores para 1 produto |
+| Criar produtos duplicados | Estoque fragmentado, relatórios inconsistentes | Tabela unifica o estoque no mesmo produto_id_interno |
+| Guardar apenas no código | Perda de rastreabilidade fiscal | Tabela mantém histórico de quem forneceu o quê |
+
+### **13.1.2 A Lógica de Conversão de Unidades**
+
+O XML do fornecedor pode vir em unidades diferentes das que você controla internamente. A tabela de vínculos resolve isso com o campo fator_conversao.
+
+**Exemplos Práticos:**
+
+| Cenário | XML do Fornecedor | Seu Controle Interno | Fator | Lógica Aplicada |
+| :---- | :---- | :---- | :---- | :---- |
+| Caixa com múltiplas unidades | 10 CX (caixas) | UN (unidade) - cada caixa tem 12 unidades | 12 | Estoque final = 10 × 12 = 120 unidades |
+| Peso com unidade diferente | 5 KG | GR (gramas) | 1000 | Estoque final = 5 × 1000 = 5000 gramas |
+| Unidade compatível | 15 UN | UN | 1 | Estoque final = 15 unidades |
+
+**Implementação da Lógica:**
+
+```python
+def calcular_quantidade_estoque(
+    quantidade_xml: float, 
+    fator_conversao: float,
+    unidade_xml: str,
+    unidade_destino: str
+) -> dict:
+    """
+    Retorna a quantidade final e metadados da conversão.
+    """
+    quantidade_final = quantidade_xml * fator_conversao
+    
+    return {
+        "quantidade_original": quantidade_xml,
+        "unidade_original": unidade_xml,
+        "fator_aplicado": fator_conversao,
+        "quantidade_final": quantidade_final,
+        "unidade_final": unidade_destino,
+        "log_conversao": f"{quantidade_xml} {unidade_xml} × {fator_conversao} = {quantidade_final} {unidade_destino}"
+    }
+```
+
+### **13.1.3 O Dilema dos Múltiplos Fornecedores — Resolvido**
+
+**Cenário Real:**
+- Produto: Refrigerante 2L (seu ID interno: PROD-REFRIG-2L)
+- Fornecedor Primário: Ambev — código no sistema deles: AMB-REFRIG-2L
+- Fornecedor Secundário: Distribuidor Local — código no sistema deles: DIST-999
+
+**Como a Tabela Resolve:**
+
+| fornecedor_id | codigo_fornecedor | produto_id_interno | fator_conversao |
+| :---- | :---- | :---- | :---- |
+| Ambev (UUID) | AMB-REFRIG-2L | PROD-REFRIG-2L | 12 (caixa com 12) |
+| Distribuidor Local (UUID) | DIST-999 | PROD-REFRIG-2L | 1 (venda unitária) |
+
+**Resultado:**
+- Quando chega XML da Ambev com código AMB-REFRIG-2L, sistema sabe: é o mesmo produto, converte caixa para unidades.
+- Quando chega XML do Distribuidor com código DIST-999, sistema sabe: é o mesmo produto, entrada direta.
+- Estoque unificado: ambas as entradas somam no mesmo PROD-REFRIG-2L.
+
+**Benefício Fiscal e Gerencial:**
+- Histórico de compras por fornecedor preservado (via eventos)
+- Custo médio calculado corretamente (preços diferentes por fornecedor)
+- Rastreabilidade: você sabe que naquela data, veio do fornecedor secundário
+
+### **13.1.4 Fluxo de Aprendizado Contínuo — A Tela de Conciliação**
+
+O sistema não nasce sabendo todos os vínculos. Ele aprende com a operação. A Tela de Conciliação é o mecanismo de aprendizado supervisionado.
+
+```
+XML RECEBIDO → [SISTEMA CONSULTA VÍNCULOS] → 
+    ├── Se vínculo encontrado → PROCESSAMENTO AUTOMÁTICO
+    └── Se vínculo NÃO encontrado → TELA DE CONCILIAÇÃO
+```
+
+**Tela de Conciliação — Passo a Passo:**
+
+**1. Apresentação dos Dados do XML:**
+```
+Item da Nota (Fornecedor: Distribuidor Local)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Código do Fornecedor: DIST-999
+Descrição: REFRIGERANTE COLA 2L
+Quantidade: 5
+Unidade: UN
+NCM: 2202.10.00
+EAN/GTIN: 7891234567890
+```
+
+**2. Ações do Operador:**
+
+| Ação | Comportamento do Sistema |
+| :---- | :---- |
+| Buscar produto existente | Campo de busca com autocomplete no catálogo interno |
+| Vincular a produto existente | Sistema pergunta: "Qual o fator de conversão para este fornecedor?" (ex: 1 UN = 1 UN, ou 1 CX = 12 UN) |
+| Cadastrar novo produto | Sistema pré-preenche formulário com dados do XML (descrição, NCM, EAN) |
+| Ignorar item | Apenas se for item de bonificação ou algo que não entra em estoque |
+
+**3. Confirmação do Vínculo:**
+
+```json
+// Payload enviado pelo front-end ao confirmar vínculo
+{
+  "item_xml_id": "item_001",
+  "acao": "vincular_existente",
+  "produto_id_interno": "PROD-REFRIG-2L",
+  "fator_conversao": 1.0,
+  "criar_vinculo_permanente": true  // Aprende para o futuro
+}
+```
+
+**4. Aprendizado Concluído:**
+- Sistema insere registro na tabela vinculo_fornecedor_produto
+- Campo vezes_utilizado incrementado a cada uso
+- Próxima nota do mesmo fornecedor com mesmo código: automático
+
+### **13.1.5 Extração Inteligente para Cadastro de Novos Produtos**
+
+Quando o produto é realmente novo (não encontrado na busca), o sistema usa os dados do XML para pré-preencher o cadastro, reduzindo digitação e erros.
+
+**Mapeamento XML → Cadastro:**
+
+| Campo no XML | Campo no Cadastro do Produto | Tratamento |
+| :---- | :---- | :---- |
+| xProd (descrição) | nome | Capitalizado, removido excesso de espaços |
+| cEAN (código de barras) | gtin | Validado (se vazio ou não numérico, fica em branco) |
+| NCM | ncm | Validado contra tabela oficial |
+| uCom (unidade) | unidade_padrao | Mapeado: CX → UN (se fator configurado), UN → UN, KG → KG |
+
+**Exemplo de Pré-Preenchimento:**
+
+```json
+// Dados extraídos do XML
+{
+  "descricao_fornecedor": "REFRIGERANTE GUARANA 2L",
+  "gtin": "7894900011517",
+  "ncm": "2202.10.00",
+  "unidade": "UN"
+}
+
+// Formulário pré-preenchido para o operador
+{
+  "nome": "Refrigerante Guarana 2L",
+  "gtin": "7894900011517",
+  "ncm": "2202.10.00",
+  "unidade_padrao": "UN",
+  "categoria": "[aguardando seleção]",
+  "preco_custo": "[campo vazio]",
+  "preco_venda": "[campo vazio]"
+}
+```
+
+### **13.1.6 Endpoints da Funcionalidade**
+
+| Método | Endpoint | Descrição |
+| :---- | :---- | :---- |
+| POST | /wms/v1/vinculos/consultar | Consulta se código de fornecedor já tem vínculo |
+| POST | /wms/v1/vinculos | Cria novo vínculo (aprendizado) |
+| GET | /wms/v1/vinculos/fornecedor/{fornecedor_id} | Lista todos vínculos de um fornecedor |
+| PATCH | /wms/v1/vinculos/{vinculo_id} | Atualiza fator de conversão |
+| DELETE | /wms/v1/vinculos/{vinculo_id} | Remove vínculo (apenas se não usado em importações recentes) |
+| GET | /wms/v1/produtos/busca-expressa?q={termo} | Busca otimizada para tela de conciliação |
+
+### **13.1.7 Catálogo de Eventos — Aprendizado e Vínculos**
+
+**NOVOS EVENTOS — GESTÃO DE FORNECEDORES**
+
+**▸** vinculo_fornecedor_criado
+
+Emitido quando um novo vínculo é estabelecido manualmente. Payload: fornecedor_id, codigo_fornecedor, produto_id_interno, fator_conversao, criado_por.
+
+**▸** vinculo_fornecedor_utilizado
+
+Emitido sempre que um vínculo existente é usado em uma importação. Payload: vinculo_id, importacao_id. Usado para estatísticas e auditoria.
+
+**▸** produto_sugerido_importacao
+
+Emitido quando o sistema pré-preenche um cadastro com dados do XML, mas o operador ainda não concluiu. Permite rastrear tentativas de cadastro.
+
+### **13.1.8 Idempotência e Consistência em Vínculos**
+
+Assim como nas movimentações de estoque, a criação de vínculos deve ser idempotente para evitar duplicidade em caso de retry.
+
+**Regra:** O par (tenant_id, fornecedor_id, codigo_fornecedor) é único. Se o front-end tentar criar o mesmo vínculo duas vezes (mesma Idempotency-Key), o sistema retorna o vínculo existente com status 200 (não 201).
+
+### **13.1.9 Exemplo Completo de Fluxo**
+
+**Cenário:** Primeira compra de um fornecedor novo
+
+1. Operador faz upload do XML → endpoint /wms/v1/xml/analisar
+2. Sistema identifica item com código DIST-999 → consulta vínculos → não encontrado
+3. Sistema retorna análise com status AMBIGUOUS para este item
+4. Front-end renderiza Tela de Conciliação:
+   - Dados do XML exibidos
+   - Campo de busca para produto interno
+5. Operador busca por "refrigerante 2L" → encontra PROD-REFRIG-2L
+6. Operador seleciona e informa fator de conversão (1 UN = 1 UN)
+7. Front-end envia confirmação para /wms/v1/vinculos
+8. Sistema:
+   - Cria registro na tabela de vínculos
+   - Emite vinculo_fornecedor_criado
+   - Agora pode processar o recebimento
+9. Próxima nota do mesmo fornecedor → sistema reconhece automaticamente
+
+### **13.1.10 Considerações sobre NFC-e (Nota Fiscal ao Consumidor)**
+
+A mesma lógica de vínculos se aplica à NFC-e (venda no PDV), mas com uma diferença fundamental:
+
+| Aspecto | NF-e (Compra) | NFC-e (Venda) |
+| :---- | :---- | :---- |
+| Direção | Entrada no estoque | Saída do estoque |
+| Vínculo | Fornecedor → seu produto | Seu produto → descrição na venda |
+| Conversão | Necessária (cx → un) | Necessária (cx → un) |
+| Aprendizado | CNPJ do fornecedor + código | (não se aplica) |
+
+Na NFC-e, o sistema não precisa "aprender" vínculos de fornecedores, mas sim garantir que a descrição impressa no cupom seja amigável ao cliente, enquanto o controle interno permanece rigoroso.
+
+### **13.1.11 Resumo: O Que Foi Adicionado ao Sistema**
+
+| Funcionalidade | Benefício |
+| :---- | :---- |
+| Tabela de vínculos fornecedor-produto | Um produto, múltiplos fornecedores, estoque unificado |
+| Fator de conversão por fornecedor | Unidades diferentes, mesma contagem |
+| Tela de conciliação com aprendizado | Sistema melhora com o uso |
+| Extração inteligente para cadastro | Produtos novos cadastrados em segundos |
+| Eventos de auditoria | Rastreabilidade completa de vínculos |
+
+---
+
+*Jade-stock — Adendos à Documentação Técnica v1.2 — 2026*
+
+"Um sistema que aprende com a operação é um sistema que cresce com o negócio."

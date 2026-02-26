@@ -5,12 +5,13 @@ from __future__ import annotations
 import unittest
 
 try:
-    from fastapi.testclient import TestClient
+    import fastapi  # noqa: F401
 
     _FASTAPI_AVAILABLE = True
 except Exception:
-    TestClient = None  # type: ignore[assignment]
     _FASTAPI_AVAILABLE = False
+
+from tests._sync_asgi_client import SyncASGITestClient as TestClient
 
 if _FASTAPI_AVAILABLE:
     from wms.interfaces.api import app as api_module
@@ -23,6 +24,7 @@ class ApiInMemoryTestCase(unittest.TestCase):
     def setUp(self) -> None:
         api_module.API_BACKEND = "inmemory"
         self.client = TestClient(api_module.app)
+        self.addCleanup(self.client.close)
 
     def test_health(self) -> None:
         response = self.client.get("/v1/health")

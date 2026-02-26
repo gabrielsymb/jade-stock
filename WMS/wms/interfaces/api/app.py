@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import time
 from dataclasses import asdict
 from datetime import date
 from typing import Callable, Dict, Literal, Type
@@ -116,10 +117,22 @@ from wms.infrastructure.repositories.in_memory_orcamento_repository import (
     InMemoryOrcamentoRepository,
 )
 
+# Routers XML dedicados (opcionais, para manter boot resiliente)
+try:
+    from wms.interfaces.api_xml_analise import router as xml_analise_router
+    from wms.interfaces.api_xml_confirmacao import router as xml_confirmacao_router
+    _XML_ROUTERS_AVAILABLE = True
+except Exception:
+    _XML_ROUTERS_AVAILABLE = False
+
 API_BACKEND = os.getenv("WMS_API_BACKEND", "inmemory").strip().lower()
 TENANT_ID = os.getenv("WMS_API_TENANT_ID", "loja_demo")
 
 app = FastAPI(title="WMS API", version="0.1.0")
+
+if _XML_ROUTERS_AVAILABLE:
+    app.include_router(xml_analise_router)
+    app.include_router(xml_confirmacao_router)
 
 IDEMPOTENCY_NOTE = (
     " Idempotencia: para retry, reutilize o mesmo `correlation_id` com o mesmo payload. "
@@ -712,6 +725,21 @@ async def http_exception_handler(_: Request, exc: HTTPException):
     )
 
 
+@app.exception_handler(ValueError)
+async def value_error_handler(request: Request, exc: ValueError):
+    """Handler para erros de validação (XML e outros)"""
+    correlation_id = request.headers.get("X-Correlation-ID")
+    return JSONResponse(
+        status_code=400,
+        content={
+            "code": "validation_error",
+            "message": str(exc),
+            "correlation_id": correlation_id,
+            "timestamp": time.time()
+        }
+    )
+
+
 def _execute_postgres_with_idempotency(
     *,
     connection,
@@ -818,12 +846,12 @@ def execute_use_case(
     summary="Health check da API",
     description="Retorna status da API e backend ativo (inmemory ou postgres).",
 )
-def health() -> dict:
+async def health() -> dict:
     return {"status": "ok", "backend": API_BACKEND}
 
 
 @app.get("/favicon.ico")
-def favicon() -> Response:
+async def favicon() -> Response:
     return Response(status_code=204)
 
 
@@ -836,7 +864,7 @@ def favicon() -> Response:
     ),
     responses=IDEMPOTENCY_RESPONSES,
 )
-def registrar_movimentacao(body: MovimentacaoRequest) -> dict:
+async def registrar_movimentacao(body: MovimentacaoRequest) -> dict:
     data = RegistrarMovimentacaoEstoqueInput(**body.model_dump())
     try:
         if API_BACKEND == "postgres":
@@ -869,7 +897,7 @@ def registrar_movimentacao(body: MovimentacaoRequest) -> dict:
     ),
     responses=IDEMPOTENCY_RESPONSES,
 )
-def registrar_ajuste(body: AjusteRequest) -> dict:
+async def registrar_ajuste(body: AjusteRequest) -> dict:
     data = RegistrarAjusteEstoqueInput(**body.model_dump())
     try:
         if API_BACKEND == "postgres":
@@ -902,7 +930,7 @@ def registrar_ajuste(body: AjusteRequest) -> dict:
     ),
     responses=IDEMPOTENCY_RESPONSES,
 )
-def registrar_avaria(body: AvariaRequest) -> dict:
+async def registrar_avaria(body: AvariaRequest) -> dict:
     data = RegistrarAvariaEstoqueInput(**body.model_dump())
     try:
         if API_BACKEND == "postgres":
@@ -935,7 +963,7 @@ def registrar_avaria(body: AvariaRequest) -> dict:
     ),
     responses=IDEMPOTENCY_RESPONSES,
 )
-def registrar_recebimento(body: RecebimentoRequest) -> dict:
+async def registrar_recebimento(body: RecebimentoRequest) -> dict:
     itens = [ItemRecebimentoInput(**item.model_dump()) for item in body.itens]
     data = RegistrarRecebimentoInput(
         nota_fiscal=body.nota_fiscal,
@@ -976,7 +1004,7 @@ def registrar_recebimento(body: RecebimentoRequest) -> dict:
     ),
     responses=IDEMPOTENCY_RESPONSES,
 )
-def registrar_inventario_ciclico(body: InventarioCiclicoRequest) -> dict:
+async def registrar_inventario_ciclico(body: InventarioCiclicoRequest) -> dict:
     itens = [ItemContagemCiclicaInput(**item.model_dump()) for item in body.itens]
     data = RegistrarInventarioCiclicoInput(
         operador=body.operador,
@@ -1019,7 +1047,7 @@ def registrar_inventario_ciclico(body: InventarioCiclicoRequest) -> dict:
     ),
     responses=IDEMPOTENCY_RESPONSES,
 )
-def registrar_politica_kanban(body: KanbanPoliticaRequest) -> dict:
+async def registrar_politica_kanban(body: KanbanPoliticaRequest) -> dict:
     data = RegistrarPoliticaKanbanInput(**body.model_dump())
     try:
         if API_BACKEND == "postgres":
@@ -1052,7 +1080,7 @@ def registrar_politica_kanban(body: KanbanPoliticaRequest) -> dict:
     ),
     responses=IDEMPOTENCY_RESPONSES,
 )
-def processar_curva_abcd(body: CurvaABCDProcessarRequest) -> dict:
+async def processar_curva_abcd(body: CurvaABCDProcessarRequest) -> dict:
     itens = [ItemCurvaABCDInput(**item.model_dump()) for item in body.itens]
     data = ProcessarCurvaABCDInput(
         operador=body.operador,
@@ -1090,7 +1118,7 @@ def processar_curva_abcd(body: CurvaABCDProcessarRequest) -> dict:
     ),
     responses=IDEMPOTENCY_RESPONSES,
 )
-def processar_giro_estoque(body: GiroEstoqueProcessarRequest) -> dict:
+async def processar_giro_estoque(body: GiroEstoqueProcessarRequest) -> dict:
     itens = [ItemGiroEstoqueInput(**item.model_dump()) for item in body.itens]
     data = ProcessarGiroEstoqueInput(
         operador=body.operador,
@@ -1128,7 +1156,7 @@ def processar_giro_estoque(body: GiroEstoqueProcessarRequest) -> dict:
     ),
     responses=IDEMPOTENCY_RESPONSES,
 )
-def processar_sazonalidade(body: SazonalidadeProcessarRequest) -> dict:
+async def processar_sazonalidade(body: SazonalidadeProcessarRequest) -> dict:
     itens = [ItemSazonalidadeInput(**item.model_dump()) for item in body.itens]
     data = ProcessarSazonalidadeOperacionalInput(
         operador=body.operador,
@@ -1170,7 +1198,7 @@ def processar_sazonalidade(body: SazonalidadeProcessarRequest) -> dict:
     ),
     responses=IDEMPOTENCY_RESPONSES,
 )
-def processar_governanca_orcamentaria(body: OrcamentoSimulacaoRequest) -> dict:
+async def processar_governanca_orcamentaria(body: OrcamentoSimulacaoRequest) -> dict:
     aporte = None
     if body.aporte_externo is not None:
         aporte = AporteExternoInput(

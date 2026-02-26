@@ -2,6 +2,8 @@
 
 Use este checklist para validar a qualidade do sistema sem depender de jargão técnico.
 
+> Atualizado em 26/02/2026.
+
 ## Regras de negócio
 
 - Este fluxo respeita a regra original que defini?
@@ -31,3 +33,10 @@ Use este checklist para validar a qualidade do sistema sem depender de jargão t
 - Esse novo requisito entra como novo caso de uso ou muda um já existente?
 - Essa mudança é compatível com `v1` ou exigiria `v2`?
 - Estamos adicionando valor real ou apenas complexidade?
+
+## Integração via SDK (para evitar retrabalho)
+
+- O SDK já cobre o endpoint que eu preciso ou estamos obrigando uso manual da API?
+- O time consegue executar um fluxo em menos de 10 linhas de código?
+- Existe exemplo pronto no `sdk/README.md` para esse fluxo?
+- Em erro de integração, a mensagem está clara para quem não é especialista?
